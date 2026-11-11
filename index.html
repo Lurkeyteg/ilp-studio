@@ -190,6 +190,22 @@ tbody tr.hl td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
 .neg{color:var(--down)}.pos{color:var(--up)}
 td.mut{color:var(--muted)}
 
+.wbtbl{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.wbtbl th{position:static;background:transparent;font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--muted);font-weight:650;padding:6px 8px;text-align:right;border-bottom:1px solid var(--line);
+  cursor:default;white-space:nowrap}
+.wbtbl th:first-child{text-align:left}
+.wbtbl td{padding:7px 8px;text-align:right;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent);
+  position:static;background:none;white-space:nowrap}
+.wbtbl td:first-child{text-align:left;color:var(--muted)}
+.wbtbl tr.hit td{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--txt);font-weight:650}
+.wbtbl tr.hit td:first-child{color:var(--accent2)}
+.wbtbl tr.dim td{opacity:.55}
+.wbtbl .tot{color:var(--muted);font-weight:400}
+.nexttier{margin-top:10px;font-size:12px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel2);line-height:1.5}
+.nexttier b{color:var(--accent2)}
+.wbimg{width:100%;border:1px solid var(--line);border-radius:9px;margin-top:10px;background:#fff;display:block}
 /* ---------- method / compare ---------- */
 .mrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px}
 .mrow:first-of-type{border-top:0}
@@ -343,6 +359,19 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
         <details id="notesBox"><summary>Original notes from the spreadsheet</summary><pre class="notes" id="origNotes"></pre></details>
       </div>
 
+      <div class="card" style="margin-top:14px" id="bonusCard">
+        <div class="chead">
+          <p class="ctitle" style="margin:0">Welcome bonus tiers</p>
+          <span class="pill" id="wbPill"></span>
+        </div>
+        <div id="wbTable"></div>
+        <div id="wbNext"></div>
+        <details id="wbImgBox">
+          <summary>Original bonus table from the product sheet</summary>
+          <img class="wbimg" id="wbImg" alt="Welcome bonus table">
+        </details>
+      </div>
+
       <div class="card" style="margin-top:14px">
         <div class="chead"><p class="ctitle" style="margin:0">All six plans, same assumptions</p>
           <span class="pill" id="cmpPill"></span></div>
@@ -361,48 +390,48 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
    Every figure here is read off the sheet's formulas, not guessed.
    ============================================================ */
 const PLANS = {
-  APA30:{name:"APA 3.0",term:"10-Pay",min:12000,pay:10,demo:12000,rate:8,
-    wb:{1:.15,2:.18,3:.20},special:[[1,9,0],[10,20,.05],[21,999,.08]],
+  APA30:{name:"APA 3.0",term:"10-Pay",min:2400,pay:10,demo:12000,rate:8,
+    wbBands:[{min:2400,max:4799,rates:{1:.05}},{min:4800,max:7199,rates:{1:.05,2:.08,3:.10}},{min:7200,max:11999,rates:{1:.10,2:.13,3:.15}},{min:12000,max:Infinity,rates:{1:.15,2:.18,3:.20}}],special:[[1,9,0],[10,20,.05],[21,999,.08]],
     supp:.039,suppYears:10,invRate:0,invYears:[0,0],perf:0,dividends:false,
     surrender:{1:1,2:1,3:.8,4:.7,5:.6,6:.5,7:.45,8:.35,9:.2,10:.05},
-    bullets:["Welcome bonus <b>15% / 18% / 20%</b> in years 1–3",
+    bullets:["Welcome bonus <b>5%–20% a year</b> by premium tier, years 1–3 (<b>15 / 18 / 20%</b> at S$12,000+)",
              "Special bonus <b>5%</b> of annual premium years 10–20, <b>8%</b> from year 21",
              "Supplementary charge <b>3.9% p.a.</b> for the first 10 years",
              "No investment, performance bonus or dividends"],
     notes:"Minimum For Policy is $12000 a year, there is no maximum, make so i can put any number beyond that as well\nThis Plan is payable for 10 years only, welcome bonuses are based on annualised premium (as shown above)\nSpecial Bonuses are 5% from years 10-20, and 8% from years 21 and beyond based on account value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.9% per year on account value and only last 10 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nMake it so i can also put ad Hoc top at any point of the policy term, have the welcome bonuses all incorporated into the calculator itself, so once i key in the premium, it auto updates if possible\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   AWV10:{name:"AWV 1.0",term:"8-Pay",min:7800,pay:8,demo:12000,rate:8,
-    wb:{1:.03,2:.05,3:.07,4:.09,5:.11},special:[],
+    wbBands:[{min:7800,max:8999,rates:{1:.01,2:.03,3:.05,4:.07}},{min:9000,max:11999,rates:{1:.03,2:.04,3:.05,4:.07,5:.07}},{min:12000,max:Infinity,rates:{1:.03,2:.05,3:.07,4:.09,5:.11}}],special:[],
     supp:.036,suppYears:10,invRate:.025,invYears:[9,12],perf:.003,dividends:true,
     surrender:{1:.7,2:.65,3:.6,4:.55,5:.5,6:.4,7:.3,8:.2,9:.1,10:.05},
-    bullets:["Welcome bonus <b>3% → 11%</b> across years 1–5",
+    bullets:["Welcome bonus <b>1% → 11%</b> by premium tier, years 1–5 (<b>3 / 5 / 7 / 9 / 11%</b> at S$12,000+)",
              "Investment bonus <b>2.5%</b> of premium, years 9–12",
              "Performance bonus <b>0.3% p.a.</b> of policy value from year 9",
              "Supplementary charge <b>3.6% p.a.</b> · 7% dividends available"],
     notes:"Minimum For Policy is $7800 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 8 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 8 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 9-12 based on First year premium \nPerformace bonus of 0.3% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   PWV5:{name:"PWV 3.0",term:"5-Pay",min:18000,pay:5,demo:42000,rate:7,
-    wb:{1:.03,2:.04,3:.05},special:[],
+    wbBands:[{min:18000,max:23999,rates:{}},{min:24000,max:41999,rates:{1:.03}},{min:42000,max:Infinity,rates:{1:.03,2:.04,3:.05}}],special:[],
     supp:.036,suppYears:7,invRate:.025,invYears:[8,11],perf:.004,dividends:true,
     surrender:{1:.6,2:.6,3:.5,4:.4,5:.3,6:.2,7:.1},
-    bullets:["Welcome bonus <b>3% / 4% / 5%</b> in years 1–3",
+    bullets:["Welcome bonus <b>3 / 4 / 5%</b> — but <b>only from S$24,000</b> a year; below that there is none",
              "Investment bonus <b>2.5%</b> of premium, years 8–11",
              "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
              "Supplementary charge <b>3.6% p.a.</b> · dividends reinvested at 7%"],
     notes:"Minimum For Policy is $18000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 5 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   PWV2:{name:"PWV 3.0",term:"2-Pay",min:48000,pay:2,demo:138000,rate:7,
-    wb:{1:.02,2:.03},special:[],
+    wbBands:[{min:48000,max:83999,rates:{}},{min:84000,max:137999,rates:{1:.02}},{min:138000,max:Infinity,rates:{1:.02,2:.03}}],special:[],
     supp:.029,suppYears:7,invRate:.01,invYears:[8,11],perf:.004,dividends:true,
     surrender:{1:.6},
-    bullets:["Welcome bonus <b>2% / 3%</b> in years 1–2",
+    bullets:["Welcome bonus <b>2 / 3%</b> — but <b>only from S$84,000</b> a year; below that there is none",
              "Investment bonus <b>1%</b> of premium, years 8–11",
              "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
              "Supplementary charge <b>2.9% p.a.</b> · dividends reinvested at 7%"],
     notes:"Minimum For Policy is $48000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 2 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 1% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   SRS1:{name:"PWV 3.0",term:"1-Pay SRS",min:15000,pay:1,demo:15000,rate:7,
-    wb:{},special:[],
+    wbBands:[],special:[],
     supp:.029,suppYears:7,invRate:.005,invYears:[8,11],perf:.004,dividends:true,
     surrender:{},
     bullets:["<b>No welcome bonus</b> on this plan",
@@ -412,7 +441,7 @@ const PLANS = {
     notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 0.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   EASY:{name:"Invest Easy",term:"1-Pay",min:15000,pay:1,demo:15300,rate:8,
-    wb:{},special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,dividends:false,
+    wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,dividends:false,
     surrender:{},entryFee:.03,
     bullets:["<b>No bonuses</b> of any kind",
              "One-time charge of <b>3%</b> on the first premium",
@@ -427,6 +456,31 @@ const ORDER=["APA30","AWV10","PWV5","PWV2","SRS1","EASY"];
    ============================================================ */
 function specialRate(p,t){for(const [lo,hi,v] of p.special){if(t>=lo&&t<=hi)return v;}return 0;}
 
+/* Welcome bonus is banded on ANNUALISED REGULAR PREMIUM, per the product tables
+   pinned in each spreadsheet tab. Below the first band there is no bonus at all —
+   which is why the minimum premium and the bonus floor are different numbers on
+   some plans (e.g. PWV 5-Pay: min $18,000, bonus starts at $24,000). */
+function wbBandFor(p,premium){
+  for(const b of (p.wbBands||[])){
+    if(premium>=b.min && (b.max===Infinity||premium<=b.max)) return b;
+  }
+  return {min:Infinity,max:Infinity,rates:{}};
+}
+function wbTotal(band){return Object.values(band.rates).reduce((a,b)=>a+b,0);}
+function bandLabel(band){
+  if(band.min===Infinity)return "below the bonus floor";
+  if(band.max===Infinity||band.max==null)return money(band.min)+" and above";
+  return money(band.min)+" – "+money(band.max);
+}
+function nextBonusFloor(p,premium){
+  for(const b of (p.wbBands||[])){
+    if(b.min>premium&&Object.keys(b.rates).length) return b;
+  }
+  return null;
+}
+
+
+
 function project(key,o){
   const p=PLANS[key], topups=o.topups||{}, years=Math.max(1,Math.round(o.years||30));
   const pay=Math.min(years,Math.max(1,Math.round(o.payYears||p.pay)));
@@ -435,7 +489,8 @@ function project(key,o){
   const rows=[]; let invested=0,av=0,net=0,reinv=0,divCash=0;
   for(let t=1;t<=years;t++){
     const b=t<=pay?o.premium:0;
-    const wb=(p.wb[t]||0)+(t===1?(o.promo||0):0);
+    const band=wbBandFor(p,o.premium);
+    const wb=(band.rates[t]||0)+(t===1?(o.promo||0):0);
     const top=+(topups[t]||0);
     const sp=specialRate(p,t)*o.premium;
     const inv=(p.invYears[1]>=p.invYears[0]&&t>=p.invYears[0]&&t<=p.invYears[1])?p.invRate*o.premium:0;
@@ -581,9 +636,16 @@ function syncInputs(){
   const yrs=state.ageTo-state.ageFrom;
   $("#yearNote").textContent=`${yrs} policy years · projections out to age 100 allowed`;
   const below=state.premium<p.min;
+  const band=wbBandFor(p,state.premium);
+  const bandYrs=Object.keys(band.rates).sort((a,b)=>a-b);
+  const bandTxt=bandYrs.length
+    ? `Welcome bonus <b>${bandYrs.map(y=>pct(band.rates[y])).join(" / ")}</b> (${bandLabel(band)})`
+    : ((p.wbBands||[]).length
+        ? `<b style="color:var(--gold)">No welcome bonus</b> at this premium — it starts at ${money((p.wbBands.find(b=>Object.keys(b.rates).length)||{}).min||0)}`
+        : `No welcome bonus on this plan`);
   $("#premHint").innerHTML=below
     ? `<span class="hint warn">Below the plan minimum of ${money(p.min)} — the sheet would reject this.</span>`
-    : `Illustration premium is ${money(p.demo)}.`;
+    : `${bandTxt}`;
   renderTopups();
 }
 function renderTopups(){
@@ -756,8 +818,12 @@ function renderMethod(){
   const p=PLANS[state.plan],m=$("#method");
   const rows=[];
   rows.push(["Premium term",`${p.pay} year${p.pay>1?"s":""} · minimum ${money(p.min)} per year`]);
-  const wbs=Object.keys(p.wb).sort((a,b)=>a-b).map(y=>`yr ${y}: ${pct(p.wb[y])}`);
-  rows.push(["Welcome bonus",wbs.length?wbs.join(" · "):"none on this plan"]);
+  const band=wbBandFor(p,state.premium);
+  const bandYears=Object.keys(band.rates).sort((a,b)=>a-b);
+  const wbsTxt=bandYears.length
+    ? bandYears.map(y=>`yr ${y}: ${pct(band.rates[y])}`).join(" · ")+`  —  band ${bandLabel(band)}`
+    : (p.wbBands&&p.wbBands.length?`none at ${money(state.premium)} — bonus starts at ${money(nextBonusFloor(p,state.premium)||0)}`:"none on this plan");
+  rows.push(["Welcome bonus",wbsTxt]);
   if(p.special.length)rows.push(["Special bonus",p.special.filter(s=>s[2]>0).map(s=>`${pct(s[2])} of annual premium, years ${s[1]===999?"21+":s[0]+"–"+s[1]}`).join(" · ")]);
   if(p.invRate)rows.push(["Investment bonus",`${pct(p.invRate)} of premium paid in years ${p.invYears[0]}–${p.invYears[1]}`]);
   if(p.perf)rows.push(["Performance bonus",`${pct(p.perf)} p.a. of policy value from year 9`]);
@@ -767,6 +833,61 @@ function renderMethod(){
   rows.push(["Dividends",p.dividends?"7% p.a., toggleable":"not applicable"]);
   m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
   $("#origNotes").textContent=p.notes;
+}
+
+/* ---------- welcome bonus tiers ---------- */
+const WB_IMG={APA30:"wb-APA30.png",AWV10:"wb-AWV10.png",PWV5:"wb-PWV5.png",PWV2:"wb-PWV2.png"};
+
+function renderBonus(){
+  const p=PLANS[state.plan],band=wbBandFor(p,state.premium);
+  const bands=p.wbBands||[];
+  const pill=$("#wbPill"),host=$("#wbTable"),next=$("#wbNext");
+  const active=Object.keys(band.rates).length>0;
+
+  if(!bands.length){
+    pill.textContent="not applicable";
+    host.innerHTML='<div class="hint">This plan has no welcome bonus — the premium buys units, nothing more.</div>';
+    next.innerHTML="";
+  } else {
+    const yrs=new Set();
+    bands.forEach(b=>Object.keys(b.rates).forEach(y=>yrs.add(+y)));
+    const years=[...yrs].sort((a,b)=>a-b);
+    pill.className="pill"+(active?" ok":" warn");
+    pill.textContent=active?`${pct(wbTotal(band))} over ${years.length} yr${years.length>1?"s":""} at ${money(state.premium)}`
+                          :`no bonus at ${money(state.premium)}`;
+    let html='<table class="wbtbl"><thead><tr><th>Annualised premium</th>'
+      +years.map(y=>`<th>Yr ${y}</th>`).join("")+'<th>Total</th></tr></thead><tbody>';
+    bands.forEach(b=>{
+      const isHit=(b===band), hasRates=Object.keys(b.rates).length>0;
+      html+=`<tr class="${isHit?"hit":(hasRates?"":"dim")}"><td>${bandLabel(b)}</td>`
+        +years.map(y=>`<td>${b.rates[y]?pct(b.rates[y]):"—"}</td>`).join("")
+        +`<td class="tot">${hasRates?pct(wbTotal(b)):"no bonus"}</td></tr>`;
+    });
+    html+="</tbody></table>";
+    host.innerHTML=html;
+    const nb=nextBonusFloor(p,state.premium);
+    if(nb){
+      const extra=nb.min-state.premium;
+      const gain=nb.min*(nb.rates[1]||0)-state.premium*(band.rates[1]||0);
+      next.innerHTML=`<div class="nexttier">Next tier: <b>${money(nb.min)}</b> of annual premium
+        (${money(extra)} more)${gain>0?` — welcome bonus rises to <b>${pct(wbTotal(nb))}</b> across ${Object.keys(nb.rates).length} year${Object.keys(nb.rates).length>1?"s":""}, <b>${money(gain)}</b> more in year 1 alone`:""}.</div>`;
+    } else if(active){
+      next.innerHTML=`<div class="nexttier">This premium is in the <b>top tier</b> — no higher welcome bonus is available.</div>`;
+    } else {
+      next.innerHTML=`<div class="nexttier">At ${money(state.premium)} there is <b>no welcome bonus</b>. It starts at <b>${money(bands.find(b=>Object.keys(b.rates).length)?.min||0)}</b> of annualised premium.</div>`;
+    }
+  }
+
+  // original product table image, if it ships alongside the page
+  const box=$("#wbImgBox"),img=$("#wbImg");
+  if(WB_IMG[state.plan]){
+    img.onerror=()=>{box.style.display="none";};
+    img.onload=()=>{box.style.display="";};
+    img.src=WB_IMG[state.plan];
+    box.style.display="";
+  } else {
+    box.style.display="none";
+  }
 }
 
 /* ---------- compare ---------- */
@@ -799,7 +920,12 @@ function renderFoot(){
   port of that sheet’s formulas — opened in <b>sheet-exact</b> mode it reproduces all 180 headline yearly values
   to the cent, which is what the badge at the top verifies on every load.
   <br><br>
-  Two spreadsheet quirks are visible rather than hidden: (1) APA and AWV add the welcome bonus to the account only
+  Welcome bonuses are <b>banded on annualised regular premium</b>, transcribed from the product
+  tables pinned in each tab. The spreadsheet's flat rates — 15/18/20% (APA), 3–11% (AWV), 3/4/5%
+  (PWV 5-Pay), 2/3% (PWV 2-Pay) — are only the <b>top band</b>, because the illustrations were run at
+  S$12,000 / S$12,000 / S$42,000 / S$138,000. Below a plan's bonus floor the bonus is <b>zero</b>:
+  PWV 5-Pay can be bought at S$18,000 but earns nothing until S$24,000, and PWV 2-Pay earns nothing
+  until S$84,000. Two spreadsheet quirks are visible rather than hidden: (1) APA and AWV add the welcome bonus to the account only
   in year 1, although later years carry a bonus percentage; (2) Invest Easy charges its 3% entry fee twice in year 1.
   Switch <b>sheet-exact</b> off to see the model behave the way the product documents read.
   <br><br>
@@ -819,7 +945,7 @@ function render(){
     dividends:state.dividends===null?p.dividends:state.dividends,
     sheetExact:state.exact,ageFrom:state.ageFrom});
   renderRail();renderKpis(res);renderChart(res);renderBars(res);
-  renderTable(res);renderMethod();renderCompare();renderFoot();
+  renderTable(res);renderMethod();renderBonus();renderCompare();renderFoot();
 }
 
 /* ---------- wiring ---------- */
