@@ -1,21 +1,33 @@
-# ILP Studio — Policy Projection
+# ILP Studio — policy projection
 
-A single-file, offline-capable projection tool for six investment-linked policy
-plans (APA 3.0 10-Pay · AWV 1.0 8-Pay · PWV 3.0 5/2/1-Pay SRS · Invest Easy).
-
-Open `index.html` — no build step, no dependencies, no network calls.
+Private working copy of the ILP projection tool. The app itself is a single file,
+`index.html` — no build step, no dependencies, no network calls. Open it directly
+(or use the desktop shortcut on the machine where it is maintained).
 
 ## What it models
 
-Per plan and per policy year: premium, welcome bonus, special/investment/performance
-bonuses, supplementary charge and its window, dividends (received or reinvested),
-surrender charge, and cash-out value — out to age 100, with ad-hoc top-ups, an
-extra promotional welcome bonus and an adjustable assumed return.
+Per plan and per policy year: premium, banded welcome bonus, special/investment/
+performance bonuses, supplementary charge and its window, surrender charge, cash-out
+value, and quarterly fund dividends (reinvested or taken as cash) — out to age 100,
+with ad-hoc top-ups, a promotional bonus and an adjustable assumed return.
 
-The projection engine is a line-by-line port of the source spreadsheet's formulas.
-On every load the page re-runs all six plans against the source figures and shows
-a parity badge (180 of 180 yearly values match to the cent).
+## Verification
 
-## Notes
+The engine is a line-by-line port of the source spreadsheet's formulas and re-checks
+itself on every load: with **sheet-exact** on it reproduces all 180 yearly
+account-value figures (6 plans x 30 years) to the cent.
 
-Reference illustration only — not advice, and not a forecast.
+## Corrections applied by default
+
+1. The three PWV tabs never applied the assumed return in the spreadsheet; the
+   account now grows like every other plan.
+2. APA and AWV credit the welcome bonus only in year 1 in the spreadsheet.
+3. Invest Easy charges its 3% entry fee twice in year 1.
+
+## Status
+
+**Private, no public site.** GitHub Pages needs a public repo on a free plan, so
+there is no shareable link. For client-facing use, host elsewhere (or make this
+public and enable Pages).
+
+Reference illustration only — not advice, not a forecast.
