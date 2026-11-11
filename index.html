@@ -101,6 +101,7 @@ body{background:var(--bg);background-image:var(--glow);background-repeat:no-repe
 .card + .card{margin-top:14px}
 .ctitle{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px}
 .side{position:sticky;top:74px}
+.side.tall{position:static}
 @media(max-width:940px){.side{position:static}}
 
 /* ---------- fields ---------- */
@@ -142,6 +143,17 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 .chipx button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
 .chipx button:hover{color:var(--down)}
 
+.sel{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+  border-radius:var(--rs);padding:9px 10px;font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+.sel:focus{border-color:var(--accent)}
+.seg{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px;margin-top:8px}
+.seg button{flex:1;background:none;border:0;color:var(--muted);font-family:inherit;font-size:12px;
+  padding:6px 8px;border-radius:999px;cursor:pointer;transition:.14s}
+.seg button.on{background:var(--panel);color:var(--txt);box-shadow:0 1px 5px rgba(0,0,0,.25)}
+.divk{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:6px 0;
+  border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.divk:first-child{border-top:0}
+.divk span:first-child{color:var(--muted)}
 /* ---------- kpis ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;position:relative;overflow:hidden}
@@ -304,9 +316,22 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           <div class="hint">Top-ups are free of charges and land in the account immediately.</div>
         </div>
 
-        <div class="sw">
-          <div>Dividends<small id="divSub">7% p.a. on the plan</small></div>
-          <button class="tog" id="divTog"></button>
+        <div class="field">
+          <label>Dividends <b id="divFundNote"></b></label>
+          <select id="divFund" class="sel">
+            <option value="none">No dividend fund</option>
+            <option value="adv">AIA Global Adventurous Income</option>
+            <option value="dyn">AIA Global Dynamic Income</option>
+          </select>
+          <div class="tu" style="margin-top:6px">
+            <div class="inp"><input id="divYield" type="number" min="0" max="15" step="0.1"><span class="sfx">% p.a.</span></div>
+            <div class="inp"><input id="startMonth" type="number" min="1" max="12" step="1"><span class="sfx">start month</span></div>
+          </div>
+          <div class="seg" id="divModeSeg">
+            <button data-mode="reinvest" class="on">Reinvest</button>
+            <button data-mode="cash">Take cash</button>
+          </div>
+          <div class="hint" id="divHint"></div>
         </div>
         <div class="sw">
           <div>Sheet-exact model<small>Match the spreadsheet to the cent</small></div>
@@ -392,7 +417,7 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
 const PLANS = {
   APA30:{name:"APA 3.0",term:"10-Pay",min:2400,pay:10,demo:12000,rate:8,
     wbBands:[{min:2400,max:4799,rates:{1:.05}},{min:4800,max:7199,rates:{1:.05,2:.08,3:.10}},{min:7200,max:11999,rates:{1:.10,2:.13,3:.15}},{min:12000,max:Infinity,rates:{1:.15,2:.18,3:.20}}],special:[[1,9,0],[10,20,.05],[21,999,.08]],
-    supp:.039,suppYears:10,invRate:0,invYears:[0,0],perf:0,dividends:false,
+    supp:.039,suppYears:10,invRate:0,invYears:[0,0],perf:0,
     surrender:{1:1,2:1,3:.8,4:.7,5:.6,6:.5,7:.45,8:.35,9:.2,10:.05},
     bullets:["Welcome bonus <b>5%–20% a year</b> by premium tier, years 1–3 (<b>15 / 18 / 20%</b> at S$12,000+)",
              "Special bonus <b>5%</b> of annual premium years 10–20, <b>8%</b> from year 21",
@@ -402,37 +427,37 @@ const PLANS = {
 
   AWV10:{name:"AWV 1.0",term:"8-Pay",min:7800,pay:8,demo:12000,rate:8,
     wbBands:[{min:7800,max:8999,rates:{1:.01,2:.03,3:.05,4:.07}},{min:9000,max:11999,rates:{1:.03,2:.04,3:.05,4:.07,5:.07}},{min:12000,max:Infinity,rates:{1:.03,2:.05,3:.07,4:.09,5:.11}}],special:[],
-    supp:.036,suppYears:10,invRate:.025,invYears:[9,12],perf:.003,dividends:true,
+    supp:.036,suppYears:10,invRate:.025,invYears:[9,12],perf:.003,
     surrender:{1:.7,2:.65,3:.6,4:.55,5:.5,6:.4,7:.3,8:.2,9:.1,10:.05},
     bullets:["Welcome bonus <b>1% → 11%</b> by premium tier, years 1–5 (<b>3 / 5 / 7 / 9 / 11%</b> at S$12,000+)",
              "Investment bonus <b>2.5%</b> of premium, years 9–12",
              "Performance bonus <b>0.3% p.a.</b> of policy value from year 9",
-             "Supplementary charge <b>3.6% p.a.</b> · 7% dividends available"],
+             "Supplementary charge <b>3.6% p.a.</b> · can hold a dividend-paying fund"],
     notes:"Minimum For Policy is $7800 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 8 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 8 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 9-12 based on First year premium \nPerformace bonus of 0.3% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   PWV5:{name:"PWV 3.0",term:"5-Pay",min:18000,pay:5,demo:42000,rate:7,
     wbBands:[{min:18000,max:23999,rates:{}},{min:24000,max:41999,rates:{1:.03}},{min:42000,max:Infinity,rates:{1:.03,2:.04,3:.05}}],special:[],
-    supp:.036,suppYears:7,invRate:.025,invYears:[8,11],perf:.004,dividends:true,
+    supp:.036,suppYears:7,invRate:.025,invYears:[8,11],perf:.004,
     surrender:{1:.6,2:.6,3:.5,4:.4,5:.3,6:.2,7:.1},
     bullets:["Welcome bonus <b>3 / 4 / 5%</b> — but <b>only from S$24,000</b> a year; below that there is none",
              "Investment bonus <b>2.5%</b> of premium, years 8–11",
              "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
-             "Supplementary charge <b>3.6% p.a.</b> · dividends reinvested at 7%"],
+             "Supplementary charge <b>3.6% p.a.</b> · can hold a dividend-paying fund"],
     notes:"Minimum For Policy is $18000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 5 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   PWV2:{name:"PWV 3.0",term:"2-Pay",min:48000,pay:2,demo:138000,rate:7,
     wbBands:[{min:48000,max:83999,rates:{}},{min:84000,max:137999,rates:{1:.02}},{min:138000,max:Infinity,rates:{1:.02,2:.03}}],special:[],
-    supp:.029,suppYears:7,invRate:.01,invYears:[8,11],perf:.004,dividends:true,
+    supp:.029,suppYears:7,invRate:.01,invYears:[8,11],perf:.004,
     surrender:{1:.6},
     bullets:["Welcome bonus <b>2 / 3%</b> — but <b>only from S$84,000</b> a year; below that there is none",
              "Investment bonus <b>1%</b> of premium, years 8–11",
              "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
-             "Supplementary charge <b>2.9% p.a.</b> · dividends reinvested at 7%"],
+             "Supplementary charge <b>2.9% p.a.</b> · can hold a dividend-paying fund"],
     notes:"Minimum For Policy is $48000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 2 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 1% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   SRS1:{name:"PWV 3.0",term:"1-Pay SRS",min:15000,pay:1,demo:15000,rate:7,
     wbBands:[],special:[],
-    supp:.029,suppYears:7,invRate:.005,invYears:[8,11],perf:.004,dividends:true,
+    supp:.029,suppYears:7,invRate:.005,invYears:[8,11],perf:.004,
     surrender:{},
     bullets:["<b>No welcome bonus</b> on this plan",
              "Investment bonus <b>0.5%</b> of premium, years 8–11",
@@ -441,7 +466,7 @@ const PLANS = {
     notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 0.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
   EASY:{name:"Invest Easy",term:"1-Pay",min:15000,pay:1,demo:15300,rate:8,
-    wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,dividends:false,
+    wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,
     surrender:{},entryFee:.03,
     bullets:["<b>No bonuses</b> of any kind",
              "One-time charge of <b>3%</b> on the first premium",
@@ -484,9 +509,12 @@ function nextBonusFloor(p,premium){
 function project(key,o){
   const p=PLANS[key], topups=o.topups||{}, years=Math.max(1,Math.round(o.years||30));
   const pay=Math.min(years,Math.max(1,Math.round(o.payYears||p.pay)));
-  const rate=o.rate, div=(o.dividends===undefined?p.dividends:o.dividends);
-  const exact=(o.sheetExact===undefined?true:o.sheetExact);
-  const rows=[]; let invested=0,av=0,net=0,reinv=0,divCash=0;
+  const rate=o.rate;
+  const exact=(o.sheetExact===undefined?false:o.sheetExact);
+  const divY=Math.max(0,(o.divYield===undefined?0:o.divYield))/100;   // annual yield, decimal
+  const divMode=o.divMode||"reinvest";                                 // reinvest | cash
+  const startMonth=Math.max(1,Math.min(12,o.startMonth||1));
+  const rows=[]; let invested=0,av=0,net=0,divCum=0,cashCum=0,reinvCum=0;
   for(let t=1;t<=years;t++){
     const b=t<=pay?o.premium:0;
     const band=wbBandFor(p,o.premium);
@@ -497,44 +525,59 @@ function project(key,o){
     const inflow=b*(1+wb)+top;
     invested+=inflow;
     const av0=invested+sp;
-    let charge=0,perfBonus=0;
+    let charge=0,perfBonus=0,dividend=0;
 
     if(key==="APA30"){
       const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
       const u=t<=p.suppYears?p.supp:0;
+      dividend=(net+base+sp)*divY*divFraction(t,startMonth);
+      const cashDiv=divMode==="cash"?dividend:0;
       av=(av+base+sp)*(1+rate);
       charge=av*u;
-      net=(net+base+sp)*(1+rate-u);
+      net=(net+base+sp)*(1+rate-u)-cashDiv;
     } else if(key==="AWV10"){
       const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
       const u=t<=p.suppYears?p.supp:0;
+      perfBonus=t>=9?p.perf*net:0;
+      dividend=(net+base+inv+perfBonus)*divY*divFraction(t,startMonth);
+      const cashDiv=divMode==="cash"?dividend:0;
       av=(av+base+inv)*(1+rate);
       charge=av*u;
-      perfBonus=t>=9?p.perf*net:0;
-      net=(net+base+inv+perfBonus)*(1+rate-u);
-      divCash=div?net*0.07:0;
-      reinv=0;
+      net=(net+base+inv+perfBonus)*(1+rate-u)-cashDiv;
     } else if(key==="EASY"){
       const fee=t===1?o.premium*p.entryFee:0;
+      dividend=(av+b+top)*divY*divFraction(t,startMonth);
+      const cashDiv=divMode==="cash"?dividend:0;
       av=(t===1)?((o.premium-fee)*(1+rate)-(exact?fee:0)):((av+b+top)*(1+rate));
+      av-=cashDiv;
       charge=fee; net=av;
     } else {
-      const pre=inflow+net;
+      // PWV family. The spreadsheet never grew this account at all — it only added
+      // premiums, bonuses and charges, so the assumed return had no effect. We grow
+      // it like the other plans; `exact` restores the sheet's no-growth behaviour.
+      const pre0=net+inflow;
       const u=t<=p.suppYears?p.supp:0;
-      charge=pre*u;
       perfBonus=t>=9?p.perf*net:0;
-      net=pre-charge+inv+perfBonus;
-      if(t===1) reinv=div?inflow*0.07:0;
-      else if(div) reinv=(inflow+reinv+net)*0.07+reinv;
-      else reinv=0;
-      av=net+reinv;
+      dividend=(pre0+inv+perfBonus)*divY*divFraction(t,startMonth);
+      const cashDiv=divMode==="cash"?dividend:0;
+      if(exact){
+        charge=pre0*u;
+        net=pre0-charge+inv+perfBonus-cashDiv;
+      } else {
+        const gross=pre0*(1+rate);
+        charge=gross*u;
+        net=gross-charge+inv+perfBonus-cashDiv;
+      }
+      av=net;
     }
+    divCum+=dividend;
+    if(divMode==="cash") cashCum+=dividend; else reinvCum+=dividend;
     const s=p.surrender[t]||0;
     rows.push({year:t,age:(o.ageFrom||30)+t,premium:b,wb:wb,topup:top,special:sp,
       invBonus:inv,perfBonus:perfBonus,invested:invested,av0:av0,beforeCharges:av,
-      net:net,charge:charge,reinvested:reinv,dividend:divCash,
-      total:(key==="PWV5"||key==="PWV2"||key==="SRS1")?net+reinv:net,
-      surrender:s,cashout:(net*(1-s))+reinv});
+      net:net,charge:charge,dividend:dividend,divCum:divCum,cashCum:cashCum,
+      divPaid:divMode==="cash"?dividend:0,divReinvested:divMode==="cash"?0:dividend,
+      total:net,surrender:s,cashout:net*(1-s)});
   }
   const last=rows[rows.length-1];
   const premiums=rows.reduce((a,r)=>a+r.premium,0);
@@ -542,25 +585,36 @@ function project(key,o){
   rows.forEach(r=>{r.cumPremiums=rows.slice(0,r.year).reduce((a,x)=>a+x.premium,0);});
   const breakEven=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
   return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
-    value:last.total,net:last.net,reinvested:last.reinvested,
-    profit:last.total-premiums,multiple:premiums?last.total/premiums:0,
+    value:last.total,net:last.net,dividends:divCum,cash:cashCum,reinvested:reinvCum,
+    profit:last.total+last.cashCum-premiums,multiple:premiums?last.total/premiums:0,
     breakEven:breakEven?breakEven.year:null,last}};
 }
 
+/* Quarterly distributions: Ex-Dates fall in Mar / Jun / Sep / Dec, so a policy
+   started part-way through the year receives fewer than four in year 1. */
+const EX_MONTHS=[3,6,9,12];
+function divFraction(t,startMonth){
+  if(t!==1) return 1;
+  return EX_MONTHS.filter(m=>m>=startMonth).length/4;
+}
+const DIV_FUNDS={
+  none:{label:"No dividend fund",lo:0,hi:0,def:0,note:"Fund gains are not distributed — they stay as growth."},
+  adv :{label:"AIA Global Adventurous Income",lo:7,hi:8,def:7.5,
+        note:"Target yield 7–8% p.a., paid quarterly. Distributions may be paid out of capital."},
+  dyn :{label:"AIA Global Dynamic Income",lo:4,hi:5,def:4.5,
+        note:"Target yield 4–5% p.a., paid quarterly. Distributions may be paid out of capital."}
+};
+
 /* ---------- sheet parity check (embedded expected values) ---------- */
-const EXPECTED={"APA30":[14365.8,27446.797800000004,41064.116509800006,55239.745286701815,69996.5748434566,85358.43441203833,101350.13022293191,117997.48556207214,135327.38247011713,153992.40515139195,166959.79756350332,180964.5813685836,196089.7478780703,212424.92770831595,230066.92192498126,249120.2756789798,269697.8977332982,291921.72955196205,315923.467916119,341845.34534940857,370229.7729773613,400884.9548155502,433992.55120079423,469748.7552968578,508365.45572060643,550071.492178255,595114.0115525154,643759.9324767167,696297.5270748541,753038.1292408425],
-"AWV10":[12903.84,25999.60896,39671.59175424,53945.14179142656,68846.72803024933,84403.9840635803,100645.75936237784,117602.17277432246,123458.19838152183,129590.23018763971,140701.32094845886,152737.29890420858,165451.15166499492,179223.30552958912,194141.85348187212,210302.22136570318,227807.7782721843,246770.49773556096,267311.6739670691,289562.6977080879,313665.89666530915,339775.4459037295,368058.3540207559,398695.53140944365,431882.94744396576,467832.8839892015,506775.2932524627,548959.2686627978,594654.6381862891,644153.6902689158],
-"PWV5":[44730.84,94368.25950720001,146378.7681944448,198193.46619101407,252244.5784153167,262476.55599004694,273692.07713992463,293974.02253971936,316446.882074136,340500.4204877883,366245.3156170702,392676.49286818225,420961.02854750387,451228.67044909217,483618.2487634048,518278.3118452507,555367.8064854995,595056.80580181,637527.2880817116,682973.9701447014,731605.1990396895,783643.9061612663,839328.6281541087,898914.5992806961,962674.920254768,1030901.8088931226,1103907.9383130441,1182027.8688035496,1265619.579927625,1355066.1098716168],
-"PWV2":[146531.16,310176.2199011999,323487.7339131491,337974.6777259877,353712.2663349963,370781.184672758,389267.964563028,417993.32208244,449735.54500734946,483709.6542985191,520071.9217246332,557512.9582370763,597579.0113133572,640453.8486889765,686334.1019072239,735430.1667859887,787967.166917248,844185.9846115205,904344.3640084325,968718.0914050245,1037602.258207042,1111312.6122868154,1190187.003936194,1274586.9330361865,1364899.204528476,1461537.6997699451,1564945.2718820148,1675595.773774442,1793996.228130782,1920689.1492928343],
-"SRS1":[15615,16256.09805,16955.17957005,17715.92331146355,18542.276560802256,19438.473617686122,20409.055575320657,21917.939465593103,23585.014224175102,25369.3154918418,27279.05124933307,29242.754044540976,31344.132712244456,33592.82543022552,35999.14505217775,38574.12633503399,41329.57647220697,44278.129164156955,47433.30247389902,50809.56073239603,54422.38077732913,58288.3228285822,62425.10632501035,66851.69106978219,71588.36405589613,76656.83236948296,82080.32259633957,87883.68718692011,94093.51826687664,100738.26941433761],
-"EASY":[15569.28,16814.8224,18160.008192,19612.808847360004,21181.833555148805,22876.380239560713,24706.490658725572,26683.009911423618,28817.65070433751,31123.062760684512,33612.907781539274,36301.94040406242,39206.09563638742,42342.58328729842,45729.989950282295,49388.389146304886,53339.46027800928,57606.61710025003,62215.14646827003,67192.35818573165,72567.74684059019,78373.1665878374,84643.0199148644,91414.46150805356,98727.61842869785,106625.82790299368,115155.89413523319,124368.36566605185,134317.834919336,145063.26171288287]};
+const EXPECTED={"APA30":[14365.8,27446.8,41064.12,55239.75,69996.57,85358.43,101350.13,117997.49,135327.38,153992.41,166959.8,180964.58,196089.75,212424.93,230066.92,249120.28,269697.9,291921.73,315923.47,341845.35,370229.77,400884.95,433992.55,469748.76,508365.46,550071.49,595114.01,643759.93,696297.53,753038.13],"AWV10":[12903.84,25999.61,39671.59,53945.14,68846.73,84403.98,100645.76,117602.17,123458.2,129590.23,140701.32,152737.3,165451.15,179223.31,194141.85,210302.22,227807.78,246770.5,267311.67,289562.7,313665.9,339775.45,368058.35,398695.53,431882.95,467832.88,506775.29,548959.27,594654.64,644153.69],"PWV5":[41702.64,82308.86,121858.15,157959.25,192760.72,185821.33,179131.77,180181.77,181952.49,183730.3,185515.22,186257.28,187002.31,187750.32,188501.32,189255.33,190012.35,190772.4,191535.49,192301.63,193070.84,193843.12,194618.49,195396.97,196178.56,196963.27,197751.12,198542.13,199336.3,200133.64],"PWV2":[136677.96,270732.24,262881.0,255257.46,247854.99,240667.19,233687.85,235067.85,237388.12,239717.67,242056.54,243024.77,243996.87,244972.85,245952.74,246936.56,247924.3,248916.0,249911.66,250911.31,251914.95,252922.61,253934.3,254950.04,255969.84,256993.72,258021.7,259053.78,260090.0,261130.36],"SRS1":[14565.0,14142.61,13732.48,13334.24,12947.54,12572.07,12207.48,12282.48,12406.61,12531.23,12656.36,12706.98,12757.81,12808.84,12860.08,12911.52,12963.16,13015.02,13067.08,13119.34,13171.82,13224.51,13277.41,13330.52,13383.84,13437.37,13491.12,13545.09,13599.27,13653.67],"EASY":[15569.28,16814.82,18160.01,19612.81,21181.83,22876.38,24706.49,26683.01,28817.65,31123.06,33612.91,36301.94,39206.1,42342.58,45729.99,49388.39,53339.46,57606.62,62215.15,67192.36,72567.75,78373.17,84643.02,91414.46,98727.62,106625.83,115155.89,124368.37,134317.83,145063.26]};
 
 function checkParity(){
   let pass=0,total=0,bad=[];
   for(const k of ORDER){
     const p=PLANS[k];
     const {rows}=project(k,{premium:p.demo,rate:p.rate/100,years:30,payYears:p.pay,
-      topups:{},promo:0,dividends:p.dividends,sheetExact:true,ageFrom:30});
+      topups:{},promo:0,divYield:0,divMode:"reinvest",startMonth:1,
+      sheetExact:true,ageFrom:30});
     const field=(k==="APA30"||k==="AWV10")?"net":"total";
     rows.forEach((r,i)=>{
       total++;
@@ -589,7 +643,8 @@ function fmt(n){return n>=0?"S$"+n.toLocaleString("en-SG",{maximumFractionDigits
    STATE
    ============================================================ */
 const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
-  promo:0,topups:{},dividends:null,exact:true,hidden:new Set(),hover:null};
+  promo:0,topups:{},exact:false,hidden:new Set(),hover:null,
+  divFund:"none",divYield:0,divMode:"reinvest",startMonth:1};
 
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;};
@@ -606,7 +661,7 @@ function renderRail(){
     b.onclick=()=>{
       state.plan=k;
       state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
-      state.topups={};state.dividends=null;state.promo=0;
+      state.topups={};state.promo=0;
       syncInputs();render();
     };
     r.appendChild(b);
@@ -629,9 +684,18 @@ function syncInputs(){
   $("#payNote").textContent=p.pay+" yr standard";
   $("#rateNote").textContent="";
   $("#promoNote").textContent="";
-  $("#divTog").className="tog"+((state.dividends===null?p.dividends:state.dividends)?" on":"");
-  $("#divTog").disabled=!p.dividends;
-  $("#divSub").textContent=p.dividends?"7% p.a. on the plan":"not available on this plan";
+  const fund=DIV_FUNDS[state.divFund];
+  $("#divFund").value=state.divFund;
+  $("#divYield").value=state.divYield;
+  $("#startMonth").value=state.startMonth;
+  $("#divFundNote").textContent=fund.lo?`${fund.lo}–${fund.hi}% p.a.`:"";
+  const off=state.divFund==="none";
+  $("#divYield").disabled=off;$("#startMonth").disabled=off;
+  $("#divModeSeg").style.opacity=off?".45":"1";
+  $("#divModeSeg").style.pointerEvents=off?"none":"";
+  [...document.querySelectorAll("#divModeSeg button")].forEach(b=>
+    b.classList.toggle("on",b.dataset.mode===state.divMode));
+  renderDivHint();
   $("#exactTog").className="tog"+(state.exact?" on":"");
   const yrs=state.ageTo-state.ageFrom;
   $("#yearNote").textContent=`${yrs} policy years · projections out to age 100 allowed`;
@@ -648,6 +712,30 @@ function syncInputs(){
     : `${bandTxt}`;
   renderTopups();
 }
+function quartersInYear1(){return EX_MONTHS.filter(m=>m>=state.startMonth).length;}
+function divPayments(){return 4;}
+function renderDivHint(lastRes,altRes){
+  const el2=$("#divHint"),fund=DIV_FUNDS[state.divFund];
+  if(state.divFund==="none"){
+    el2.innerHTML=`No distribution modelled — the fund's return stays inside the policy as growth.`;
+    return;
+  }
+  const y=state.divYield/100,q=quartersInYear1();
+  const perYear=state.premium*y;
+  let txt=`≈ <b>${money(perYear/4)}</b> a quarter · <b>${money(perYear)}</b> a year on a ${money(state.premium)} premium`
+    +` (${q} payment${q===1?"":"s"} in year 1, then 4 a year — Ex-Dates Mar / Jun / Sep / Dec).`;
+  if(lastRes&&altRes){
+    const diff=altRes.sum.value-lastRes.sum.value;   // alt.value - current.value
+    if(state.divMode==="cash"&&diff>1)
+      txt+=`<br>Leaving it invested instead would be worth <b>${money(diff)}</b> more by age ${state.ageTo}.`;
+    else if(state.divMode==="reinvest"&&diff<-1)
+      txt+=`<br>Taking them as cash instead would leave <b>${money(-diff)}</b> less in the policy by age ${state.ageTo} — with <b>${money(altRes.sum.cash)}</b> in hand instead.`;
+  }
+  if(state.divYield>state.rate)
+    txt+=`<br><b style="color:var(--gold)">Yield above the assumed return</b> — the excess is paid out of capital, so taking cash erodes the policy.`;
+  el2.innerHTML=txt;
+}
+
 function renderTopups(){
   const box=$("#tuList");box.innerHTML="";
   const ks=Object.keys(state.topups).map(Number).sort((a,b)=>a-b);
@@ -659,6 +747,16 @@ function renderTopups(){
   });
 }
 
+/* A sticky sidebar taller than the viewport cannot be scrolled to, so it only
+   sticks when it fits; otherwise it scrolls with the page. */
+function fitSidebar(){
+  const side=document.querySelector(".side");
+  if(!side)return;
+  const fits=side.scrollHeight<=window.innerHeight-96;
+  side.classList.toggle("tall",!fits);
+}
+window.addEventListener("resize",fitSidebar);
+
 /* ---------- KPI strip ---------- */
 function renderKpis(res){
   const p=PLANS[state.plan],s=res.sum;
@@ -666,12 +764,18 @@ function renderKpis(res){
   const yrs=state.ageTo-state.ageFrom;
   const cards=[
     {k:"Value at age "+state.ageTo,v:money(s.value),hero:true,
-     s:`after all charges${s.reinvested>0?" incl. reinvested dividends":""}`},
+     s:`after all charges${state.divFund!=="none"&&state.divMode==="reinvest"?" incl. reinvested dividends":""}`},
     {k:"Premiums paid",v:money(s.premiums),s:`${state.payYears} year${state.payYears>1?"s":""} × ${money(state.premium)}`},
     {k:"Profit",v:money(s.profit),cls:s.profit>=0?"up":"down",s:`${s.multiple.toFixed(2)}× the premiums paid`},
     {k:"Total charges",v:money(s.charges),cls:"down",s:`${pct(s.chargesPct)} of premiums`},
     {k:"Break-even",v:s.breakEven?("Year "+s.breakEven):"—",s:s.breakEven?("cashed in at age "+(state.ageFrom+s.breakEven)):"not within "+yrs+" yrs"},
   ];
+  if(state.divFund!=="none"){
+    cards.push({k:state.divMode==="cash"?"Dividends taken":"Dividends reinvested",
+      v:money(s.dividends),
+      s:state.divMode==="cash"?`${money(s.dividends/4)} a quarter at ${pct(state.divYield/100)}`
+                              :`${money(s.dividends/4)} a quarter, left in to compound`});
+  }
   cards.forEach(c=>{
     const d=el("div","kpi"+(c.hero?" hero-k":""));
     d.innerHTML=`<div class="k">${c.k}</div><div class="v ${c.cls||""}">${c.v}</div><div class="s">${c.s||""}</div>`;
@@ -743,8 +847,8 @@ function renderChart(res){
     xh.setAttribute("x1",x(i));xh.setAttribute("x2",x(i));xh.setAttribute("opacity",".5");
     tip.innerHTML=`<b>Year ${r.year} · age ${r.age}</b>
       <div class="r"><span>Value</span><span>${money(r.total)}</span></div>
-      ${r.reinvested>0?`<div class="r"><span>Account</span><span>${money(r.net)}</span></div>
-      <div class="r"><span>Reinvested div.</span><span>${money(r.reinvested)}</span></div>`:""}
+      ${r.dividend>0?`<div class="r"><span>${state.divMode==="cash"?"Paid out":"Reinvested"}</span><span>${money(r.dividend)}</span></div>
+      <div class="r"><span>Div. to date</span><span>${money(r.divCum)}</span></div>`:""}
       <div class="r"><span>Money in</span><span>${money(r.cumPremiums)}</span></div>
       <div class="r"><span>Charges</span><span>${money(r.charge)}</span></div>
       <div class="r"><span>Cash out today</span><span>${money(r.cashout)}</span></div>`;
@@ -763,7 +867,8 @@ function renderBars(res){
     {t:"Net value",v:s.net,c:"var(--accent)"},
     {t:"Charges",v:s.charges,c:"var(--down)"},
   ];
-  if(s.reinvested>0)items.push({t:"Reinvested acct.",v:s.reinvested,c:"var(--twin1)"});
+  if(s.dividends>0)items.push({t:state.divMode==="cash"?"Dividends paid":"Dividends reinvested",
+    v:s.dividends,c:"var(--twin1)"});
   if(res.rows.some(r=>r.special>0))items.push({t:"Special bonuses",v:res.rows.reduce((a,r)=>a+r.special,0),c:"var(--gold)"});
   if(res.rows.some(r=>r.invBonus>0))items.push({t:"Investment bonus",v:res.rows.reduce((a,r)=>a+r.invBonus,0),c:"var(--twin2)"});
   if(res.rows.some(r=>r.perfBonus>0))items.push({t:"Performance bonus",v:res.rows.reduce((a,r)=>a+r.perfBonus,0),c:"var(--up)"});
@@ -784,11 +889,12 @@ const COLS=[
   {id:"beforeCharges",label:"Before charges",get:r=>money(r.beforeCharges)},
   {id:"charge",label:"Charge",get:r=>r.charge?"−"+money(r.charge):"—"},
   {id:"net",label:"Net value",get:r=>money(r.net)},
-  {id:"reinv",label:"Div. reinvested",get:r=>r.reinvested?money(r.reinvested):"—"},
+  {id:"div",label:"Dividend",get:r=>r.dividend?money(r.dividend):"—"},
+  {id:"divcum",label:"Div. to date",get:r=>r.divCum?money(r.divCum):"—"},
   {id:"surr",label:"Surrender %",get:r=>r.surrender?pct(r.surrender):"—"},
   {id:"cashout",label:"Cash out",get:r=>money(r.cashout)},
 ];
-state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges","reinv"]);
+state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges"]);
 
 function renderTable(res){
   const chips=$("#colchips");chips.innerHTML="";
@@ -830,7 +936,10 @@ function renderMethod(){
   rows.push(["Supplementary charge",p.supp?`${pct(p.supp)} p.a. on account value, years 1–${p.suppYears}`:"none (one-off 3% entry charge instead)"]);
   const sur=Object.keys(p.surrender).sort((a,b)=>a-b);
   rows.push(["Surrender charge",sur.length?sur.map(y=>`${pct(p.surrender[y])}`).join(" → ")+" (years 1 onward)":"none at any time"]);
-  rows.push(["Dividends",p.dividends?"7% p.a., toggleable":"not applicable"]);
+  const fund=DIV_FUNDS[state.divFund];
+  rows.push(["Dividends",state.divFund==="none"
+    ? "no dividend fund selected — gains stay inside as growth"
+    : `${fund.label} · ${pct(state.divYield/100)} p.a. paid quarterly, ${state.divMode==="cash"?"taken as cash":"reinvested"}`]);
   m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
   $("#origNotes").textContent=p.notes;
 }
@@ -897,7 +1006,8 @@ function renderCompare(){
   let body="<tbody>";
   const data=ORDER.map(k=>{const p=PLANS[k];
     const r=project(k,{premium:p.demo,rate,years,payYears:p.pay,topups:{},promo:0,
-      dividends:p.dividends,sheetExact:state.exact,ageFrom:state.ageFrom});
+      divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
+      startMonth:state.startMonth,sheetExact:state.exact,ageFrom:state.ageFrom});
     return {k,p,sum:r.sum};});
   data.forEach(d=>{
     const cur=d.k===state.plan;
@@ -916,36 +1026,66 @@ function renderCompare(){
 /* ---------- footer ---------- */
 function renderFoot(){
   $("#foot").innerHTML=`
-  Rebuilt from the “Full ILP calculator” spreadsheet (six plan tabs). The projection engine here is a line-by-line
-  port of that sheet’s formulas — opened in <b>sheet-exact</b> mode it reproduces all 180 headline yearly values
-  to the cent, which is what the badge at the top verifies on every load.
+  Rebuilt from the “Full ILP calculator” spreadsheet (six plan tabs) and validated against it: with
+  <b>sheet-exact</b> switched on, the engine reproduces all 180 yearly values to the cent — that is what the
+  badge at the top verifies.
   <br><br>
-  Welcome bonuses are <b>banded on annualised regular premium</b>, transcribed from the product
-  tables pinned in each tab. The spreadsheet's flat rates — 15/18/20% (APA), 3–11% (AWV), 3/4/5%
-  (PWV 5-Pay), 2/3% (PWV 2-Pay) — are only the <b>top band</b>, because the illustrations were run at
-  S$12,000 / S$12,000 / S$42,000 / S$138,000. Below a plan's bonus floor the bonus is <b>zero</b>:
-  PWV 5-Pay can be bought at S$18,000 but earns nothing until S$24,000, and PWV 2-Pay earns nothing
-  until S$84,000. Two spreadsheet quirks are visible rather than hidden: (1) APA and AWV add the welcome bonus to the account only
-  in year 1, although later years carry a bonus percentage; (2) Invest Easy charges its 3% entry fee twice in year 1.
-  Switch <b>sheet-exact</b> off to see the model behave the way the product documents read.
+  <b>Three corrections, on by default:</b>
+  (1) the three <b>PWV tabs never applied the assumed return</b> — they only added premiums, bonuses and charges,
+  so the growth you saw came entirely from the dividend stream; the account now grows like the other plans;
+  (2) APA and AWV only route the welcome bonus into the account in year 1, though later years carry a bonus %;
+  (3) Invest Easy charges its 3% entry fee twice in year 1. Switch <b>sheet-exact</b> on to get the spreadsheet's
+  own numbers back, including its flat, un-banded welcome bonuses.
   <br><br>
-  Projections use a flat assumed return and the charges of each plan as written in the sheet. This is a reference
-  illustration, <b>not advice</b>, and not a forecast — actual fund returns will vary and charges may change.`;
+  <b>Dividends</b> are modelled as a quarterly distribution from the selected fund — the AIA Global Adventurous
+  Income (target 7–8% p.a.) or Global Dynamic Income (4–5%), Ex-Dates in March, June, September and December.
+  <b>Reinvest</b> keeps the money in the policy as extra units and compounds; <b>take cash</b> pays it out and the
+  account loses that value, so the difference between the two is the true cost of taking the income. A policy
+  started part-way through the year receives fewer than four payments in year 1. The yield is an assumption you
+  set, not a promise: AIA declares the rate each quarter, distributions may be paid out of capital, and neither
+  capital nor dividends are guaranteed. Use the fund's last four declared dividends for a more honest figure.
+  <br><br>
+  Projections use a flat assumed return and each plan's charges as written. This is a reference illustration,
+  <b>not advice</b>, and not a forecast.`;
   $("#assumpPill").textContent=`${pct(state.rate/100)} p.a. · ${state.ageTo-state.ageFrom} yrs · age ${state.ageFrom}→${state.ageTo}`;
+}
+
+function paintParity(){
+  const pr=checkParity(),badge=$("#parity");
+  if(pr.pass===pr.total&&!pr.bad.length){
+    badge.className="pill ok";
+    badge.textContent=state.exact?`sheet parity ${pr.pass}/${pr.total} ✓`:`sheet-exact ${pr.pass}/${pr.total} ✓`;
+    badge.title=state.exact
+      ? "Sheet-exact mode is on — every figure matches the spreadsheet."
+      : "Verified with sheet-exact mode on; your current view applies the three documented corrections.";
+  } else {
+    badge.className="pill warn";
+    badge.textContent=`parity ${pr.pass}/${pr.total}`;
+    console.warn("Parity mismatches:",pr.bad);
+  }
 }
 
 /* ============================================================
    RENDER
    ============================================================ */
+function projectOpts(over){
+  return Object.assign({premium:state.premium,rate:state.rate/100,
+    years:Math.max(1,state.ageTo-state.ageFrom),payYears:state.payYears,
+    topups:state.topups,promo:state.promo,sheetExact:state.exact,ageFrom:state.ageFrom,
+    divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
+    startMonth:state.startMonth},over||{});
+}
 function render(){
-  const p=PLANS[state.plan];
-  const years=Math.max(1,state.ageTo-state.ageFrom);
-  const res=project(state.plan,{premium:state.premium,rate:state.rate/100,years,
-    payYears:state.payYears,topups:state.topups,promo:state.promo,
-    dividends:state.dividends===null?p.dividends:state.dividends,
-    sheetExact:state.exact,ageFrom:state.ageFrom});
+  const res=project(state.plan,projectOpts());
+  // same plan with the other dividend mode, to price the choice
+  let alt=null;
+  if(state.divFund!=="none"){
+    alt=project(state.plan,projectOpts({divMode:state.divMode==="cash"?"reinvest":"cash"}));
+  }
   renderRail();renderKpis(res);renderChart(res);renderBars(res);
   renderTable(res);renderMethod();renderBonus();renderCompare();renderFoot();
+  renderDivHint(res,alt);
+  fitSidebar();
 }
 
 /* ---------- wiring ---------- */
@@ -968,10 +1108,22 @@ $("#tuAdd").onclick=()=>{
   $("#tuYear").value="";$("#tuAmt").value="";
   renderTopups();render();
 };
-$("#divTog").onclick=()=>{const p=PLANS[state.plan];
-  const cur=state.dividends===null?p.dividends:state.dividends;
-  state.dividends=!cur;syncInputs();render();};
-$("#exactTog").onclick=()=>{state.exact=!state.exact;syncInputs();render();};
+$("#divFund").addEventListener("change",e=>{
+  state.divFund=e.target.value;
+  state.divYield=DIV_FUNDS[state.divFund].def;   // start at the fund's midpoint yield
+  syncInputs();render();
+});
+$("#divYield").addEventListener("input",e=>{
+  const v=parseFloat(e.target.value);state.divYield=isFinite(v)?Math.max(0,v):0;render();
+});
+$("#startMonth").addEventListener("input",e=>{
+  const v=parseInt(e.target.value,10);state.startMonth=isFinite(v)?Math.max(1,Math.min(12,v)):1;
+  syncInputs();render();
+});
+[...document.querySelectorAll("#divModeSeg button")].forEach(b=>{
+  b.onclick=()=>{state.divMode=b.dataset.mode;syncInputs();render();};
+});
+$("#exactTog").onclick=()=>{state.exact=!state.exact;syncInputs();paintParity();render();};
 $("#themeBtn").onclick=()=>{
   const h=document.documentElement;
   h.dataset.theme=h.dataset.theme==="light"?"dark":"light";
@@ -979,14 +1131,7 @@ $("#themeBtn").onclick=()=>{
 
 /* ---------- boot ---------- */
 (function boot(){
-  const pr=checkParity();
-  const badge=$("#parity");
-  if(pr.pass===pr.total&&!pr.bad.length){
-    badge.className="pill ok";badge.textContent=`sheet parity ${pr.pass}/${pr.total} ✓`;
-  }else{
-    badge.className="pill warn";badge.textContent=`parity ${pr.pass}/${pr.total}`;
-    console.warn("Parity mismatches:",pr.bad);
-  }
+  paintParity();
   const p=PLANS[state.plan];
   state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
   syncInputs();render();
