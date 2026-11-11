@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ILP Studio — Policy Projection</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="description" content="Six linked-policy plans projected year by year: bonuses, charges, surrender values and dividends, out to age 100.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ILP Studio — Policy Projection">
+<meta property="og:description" content="Six linked-policy plans, projected year by year — bonuses, charges, surrender values and dividends, out to age 100.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0f1419">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f1419'/%3E%3Cpath d='M6 24 L13 17 L18 20 L26 9' fill='none' stroke='%237fa8c2' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0f1419;--panel:#161d27;--panel2:#1c2533;--line:#26303f;--txt:#e7edf4;--muted:#8a97a8;
+  --accent:#7fa8c2;--accent2:#9fc2d8;--onaccent:#0f1419;--up:#16c784;--down:#ea3943;
+  --gold:#ffd34d;--chip:#222c3a;--hover:#202a3a;--twin1:#8fd3c7;--twin2:#e2a0f0;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --r:14px;--rs:9px;color-scheme:dark;
+  --glow:radial-gradient(900px 420px at 15% -12%,rgba(127,168,194,.13),transparent 62%),radial-gradient(700px 380px at 92% 0%,rgba(143,211,199,.07),transparent 60%);
+}
+:root[data-theme="light"]{
+  --bg:#f4f6f9;--panel:#ffffff;--panel2:#eef2f7;--line:#dde3ea;--txt:#16202c;--muted:#5b6776;
+  --accent:#3e6076;--accent2:#34566b;--onaccent:#fff;--up:#0e9f6e;--down:#d62839;--gold:#b07d12;
+  --chip:#eef2f7;--hover:#eef2f7;--twin1:#1f8a7a;--twin2:#8a3fa0;color-scheme:light;
+  --glow:radial-gradient(900px 420px at 15% -12%,rgba(62,96,118,.10),transparent 62%),radial-gradient(700px 380px at 92% 0%,rgba(31,138,122,.06),transparent 60%);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);background-image:var(--glow);background-repeat:no-repeat;color:var(--txt);
+  font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:40px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 22px}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;padding:13px 22px;
+  border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);flex-wrap:nowrap}
+.brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+.brand b{font-size:15px;font-weight:750;letter-spacing:-.2px}
+.brand span{font-size:11.5px;color:var(--muted)}
+.sp{flex:1}
+.tbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);border-radius:8px;
+  padding:7px 11px;font-size:12.5px;line-height:1;cursor:pointer;font-family:inherit;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:6px;transition:.14s}
+.tbtn:hover{color:var(--txt);border-color:var(--accent)}
+.tbtn.on{color:var(--txt);border-color:var(--accent);background:var(--panel2)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:4px 9px;border-radius:999px;
+  border:1px solid var(--line);background:var(--chip);color:var(--muted);white-space:nowrap}
+.pill.warn{background:#241a1d;border-color:#46232b;color:#ffb3bf}
+.pill.ok{color:var(--up);border-color:color-mix(in srgb,var(--up) 35%,var(--line))}
+:root[data-theme="light"] .pill.warn{background:#fdeef0;border-color:#f3c6cc;color:#8a1f2a}
+
+@media(max-width:720px){
+  .top{padding:11px 14px;gap:7px}
+  .brand span{display:none}
+  .brand b{font-size:14px}
+  #themeBtn span{display:none}
+  #themeBtn{padding:7px 9px}
+  .pill{font-size:10px;padding:3px 7px}
+  .wrap{padding:0 14px}
+  .hero{padding:26px 0 12px}
+  .hero h1{font-size:26px}
+  .rail{grid-template-columns:1fr 1fr;gap:8px}
+  .pcard{padding:11px}
+  .pcard .mt,.pcard .mn{font-size:10.5px}
+  .kppi,.kpi{padding:11px}
+  .kpi .v{font-size:18px}
+  .bar{grid-template-columns:92px 1fr 80px;font-size:11px}
+  .mrow .mk{flex:0 0 104px;font-size:11.5px}
+}
+/* ---------- hero ---------- */
+.hero{padding:38px 0 18px}
+.hero h1{margin:0 0 10px;font-size:clamp(26px,3.4vw,40px);line-height:1.1;letter-spacing:-1.1px;font-weight:760}
+.hero h1 em{font-style:normal;color:var(--accent2)}
+.hero p{margin:0;max-width:720px;color:var(--muted);font-size:14px}
+.hero .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+/* ---------- plan rail ---------- */
+.rail{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:10px;margin:22px 0 26px}
+.pcard{position:relative;text-align:left;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--r);padding:13px 14px;cursor:pointer;font-family:inherit;color:inherit;
+  transition:.16s;overflow:hidden}
+.pcard:hover{border-color:var(--accent);transform:translateY(-1px)}
+.pcard.on{border-color:var(--accent);background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--panel)),var(--panel));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent),0 10px 30px -12px rgba(0,0,0,.5)}
+.pcard .nm{font-size:13.5px;font-weight:700;letter-spacing:-.2px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.pcard .nm small{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--chip);border:1px solid var(--line);padding:2px 6px;border-radius:6px}
+.pcard .mt{font-size:11.5px;color:var(--muted);margin-top:5px}
+.pcard .mn{font-size:11px;color:var(--muted);margin-top:2px;opacity:.85}
+
+/* ---------- layout ---------- */
+.grid{display:grid;grid-template-columns:326px 1fr;gap:18px;align-items:start}
+@media(max-width:940px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card + .card{margin-top:14px}
+.ctitle{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px}
+.side{position:sticky;top:74px}
+@media(max-width:940px){.side{position:static}}
+
+/* ---------- fields ---------- */
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;
+  color:var(--muted);margin-bottom:6px;gap:8px}
+.field label b{color:var(--txt);font-weight:650}
+.inp{display:flex;align-items:center;gap:0;background:var(--panel2);border:1px solid var(--line);
+  border-radius:var(--rs);overflow:hidden;transition:.14s}
+.inp:focus-within{border-color:var(--accent)}
+.inp .pfx{padding:0 0 0 10px;color:var(--muted);font-size:12px}
+.inp input{flex:1;min-width:0;background:none;border:0;color:var(--txt);font-family:inherit;font-size:13.5px;
+  padding:9px 10px;font-variant-numeric:tabular-nums;outline:none;width:100%}
+.inp .sfx{padding:0 10px 0 0;color:var(--muted);font-size:11.5px;white-space:nowrap}
+input[type=range]{-webkit-appearance:none;width:100%;height:22px;background:transparent;margin:2px 0 0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:3px;background:var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);margin-top:-5px;border:2px solid var(--panel);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;
+  border-top:1px solid var(--line);font-size:12.5px}
+.sw small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.tog{position:relative;width:36px;height:20px;border-radius:12px;background:var(--line);border:0;cursor:pointer;
+  flex:0 0 auto;transition:.16s}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:var(--muted);transition:.16s}
+.tog.on{background:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.tog.on::after{left:18px;background:var(--txt)}
+.hint{font-size:10.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.hint.warn{color:var(--down)}
+
+/* top-ups */
+.tu{display:flex;gap:6px;margin-top:6px}
+.tu .inp{flex:1}
+.tu input{padding:7px 8px;font-size:12.5px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chipx{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:3px 6px 3px 9px;border-radius:999px;
+  background:var(--chip);border:1px solid var(--line);color:var(--txt);font-variant-numeric:tabular-nums}
+.chipx button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
+.chipx button:hover{color:var(--down)}
+
+/* ---------- kpis ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;position:relative;overflow:hidden}
+.kpi .k{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.kpi .v{font-size:21px;font-weight:720;letter-spacing:-.6px;margin-top:5px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11px;color:var(--muted);margin-top:3px}
+.kpi.hero-k{background:linear-gradient(165deg,color-mix(in srgb,var(--accent) 14%,var(--panel)),var(--panel));
+  border-color:color-mix(in srgb,var(--accent) 42%,var(--line))}
+.kpi.hero-k .v{color:var(--accent2);font-size:25px}
+.up{color:var(--up)}.down{color:var(--down)}.gold{color:var(--gold)}
+
+/* ---------- chart ---------- */
+.chead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.chartbox{position:relative;margin-top:6px}
+.chartbox svg{display:block;width:100%;height:auto;overflow:visible}
+.tip{position:absolute;pointer-events:none;background:var(--tipbg,#0b0f15f2);border:1px solid var(--line);
+  border-radius:10px;padding:9px 11px;font-size:11.5px;min-width:158px;opacity:0;transform:translate(-50%,-118%);
+  transition:opacity .1s;z-index:20;box-shadow:0 14px 34px rgba(0,0,0,.45);color:var(--txt)}
+:root[data-theme="light"] .tip{background:#fffffff5}
+.tip b{display:block;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;letter-spacing:.4px;text-transform:uppercase}
+.tip .r{display:flex;justify-content:space-between;gap:14px;font-variant-numeric:tabular-nums;padding:1px 0}
+.tip .r span:first-child{color:var(--muted)}
+
+/* ---------- table ---------- */
+.tbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tbar .lbl{font-size:10.5px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.colchips{display:flex;gap:5px;flex-wrap:wrap}
+.cc{font-size:10.5px;padding:3px 8px;border-radius:999px;border:1px dashed var(--line);background:transparent;
+  color:var(--muted);cursor:pointer;font-family:inherit;transition:.12s}
+.cc:hover{border-color:var(--accent);color:var(--txt)}
+.cc.on{border-style:solid;background:var(--chip);color:var(--txt);border-color:var(--line)}
+.scroll{overflow:auto;max-height:470px;border:1px solid var(--line);border-radius:var(--rs)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12px}
+th{position:sticky;top:0;z-index:3;background:var(--panel2);color:var(--muted);font-weight:650;font-size:10.5px;
+  letter-spacing:.4px;text-transform:uppercase;text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);
+  white-space:nowrap;cursor:default}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:2}
+th:first-child{background:var(--panel2)}
+td{padding:7px 10px;text-align:right;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);
+  font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--txt)}
+tbody tr:hover td{background:var(--hover)}
+tbody tr:hover td:first-child{background:var(--hover)}
+tbody tr.hl td{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+.neg{color:var(--down)}.pos{color:var(--up)}
+td.mut{color:var(--muted)}
+
+/* ---------- method / compare ---------- */
+.mrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px}
+.mrow:first-of-type{border-top:0}
+.mrow .mk{color:var(--muted);flex:0 0 138px}
+.mrow .mv{flex:1}
+details{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none;display:flex;align-items:center;gap:7px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸";font-size:10px;color:var(--accent)}
+details[open] summary::before{content:"▾"}
+pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--muted);line-height:1.6;
+  background:var(--panel2);border:1px solid var(--line);border-radius:var(--rs);padding:11px;margin:10px 0 0}
+.bars{display:grid;gap:9px;margin-top:4px}
+.bar{display:grid;grid-template-columns:112px 1fr 92px;gap:10px;align-items:center;font-size:11.5px}
+.bar .bt{color:var(--muted)}
+.bar .track{display:block;height:9px;border-radius:5px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.bar .fill{display:block;height:100%;border-radius:5px;min-width:2px}
+.bar .bv{text-align:right;font-variant-numeric:tabular-nums}
+.foot{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);line-height:1.7}
+.tabs{display:inline-flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{background:none;border:0;color:var(--muted);font-family:inherit;font-size:12px;padding:6px 13px;
+  border-radius:999px;cursor:pointer;transition:.14s}
+.tabs button.on{background:var(--panel);color:var(--txt);box-shadow:0 1px 5px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand"><b>ILP Studio</b><span>policy projection</span></div>
+  <div class="sp"></div>
+  <span class="pill" id="parity">parity: checking…</span>
+  <button class="tbtn" id="themeBtn" title="Toggle theme">☀︎ <span>Theme</span></button>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Six plans, <em>one honest projection</em>.</h1>
+    <p>A live rebuild of the “Full ILP calculator” spreadsheet — every welcome bonus, special bonus,
+       performance credit, supplementary charge and surrender penalty modelled year by year, out to age 100.</p>
+    <div class="row">
+      <span class="pill warn">⚠ Reference only, not advice</span>
+      <span class="pill">Figures in S$</span>
+      <span class="pill" id="assumpPill">—</span>
+    </div>
+  </div>
+
+  <div class="rail" id="rail"></div>
+
+  <div class="grid">
+    <!-- ============ controls ============ -->
+    <div class="side">
+      <div class="card">
+        <p class="ctitle">Plan inputs</p>
+
+        <div class="field">
+          <label>Annual premium <b id="premNote"></b></label>
+          <div class="inp"><span class="pfx">S$</span><input id="premium" type="number" step="100" min="0"><span class="sfx">/ year</span></div>
+          <input id="premRange" type="range" min="0" max="200000" step="1000">
+          <div class="hint" id="premHint"></div>
+        </div>
+
+        <div class="field">
+          <label>Premiums paid for <b id="payNote"></b></label>
+          <div class="inp"><input id="payYears" type="number" min="1" max="40" step="1"><span class="sfx">years</span></div>
+        </div>
+
+        <div class="field">
+          <label>Assumed return <b id="rateNote"></b></label>
+          <div class="inp"><input id="rate" type="number" min="-5" max="20" step="0.25"><span class="sfx">% p.a.</span></div>
+          <input id="rateRange" type="range" min="0" max="15" step="0.25">
+        </div>
+
+        <div class="field">
+          <label>Age now → project to</label>
+          <div class="tu">
+            <div class="inp"><input id="ageFrom" type="number" min="0" max="99" step="1"><span class="sfx">now</span></div>
+            <div class="inp"><input id="ageTo" type="number" min="1" max="100" step="1"><span class="sfx">to</span></div>
+          </div>
+          <div class="hint" id="yearNote"></div>
+        </div>
+
+        <div class="field">
+          <label>Extra welcome bonus <b id="promoNote"></b></label>
+          <div class="inp"><input id="promo" type="number" min="0" max="50" step="0.5"><span class="sfx">% of yr-1 premium</span></div>
+          <div class="hint">AIA promotion credit — applied once, on top of the standard welcome bonus.</div>
+        </div>
+
+        <div class="field">
+          <label>Ad-hoc top-up</label>
+          <div class="tu">
+            <div class="inp"><input id="tuYear" type="number" min="1" max="100" step="1" placeholder="year"></div>
+            <div class="inp"><span class="pfx">S$</span><input id="tuAmt" type="number" min="0" step="500" placeholder="amount"></div>
+            <button class="tbtn" id="tuAdd" style="padding:9px 11px">Add</button>
+          </div>
+          <div class="chips" id="tuList"></div>
+          <div class="hint">Top-ups are free of charges and land in the account immediately.</div>
+        </div>
+
+        <div class="sw">
+          <div>Dividends<small id="divSub">7% p.a. on the plan</small></div>
+          <button class="tog" id="divTog"></button>
+        </div>
+        <div class="sw">
+          <div>Sheet-exact model<small>Match the spreadsheet to the cent</small></div>
+          <button class="tog" id="exactTog"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="ctitle">This plan pays</p>
+        <div id="planBullets"></div>
+      </div>
+    </div>
+
+    <!-- ============ results ============ -->
+    <div>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="chead">
+          <div>
+            <p class="ctitle" style="margin:0">Value over time</p>
+          </div>
+          <div class="legend">
+            <span><i style="background:var(--accent)"></i>Net value</span>
+            <span><i style="background:var(--gold)"></i>Before charges</span>
+            <span><i style="background:var(--muted)"></i>Money in (premiums)</span>
+          </div>
+        </div>
+        <div class="chartbox" id="chartbox"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ctitle">Money in vs value out</div>
+        <div class="bars" id="bars"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="tbar">
+          <span class="lbl">Year by year</span>
+          <div class="sp"></div>
+          <div class="colchips" id="colchips"></div>
+        </div>
+        <div class="scroll"><table id="tbl"></table></div>
+        <div class="hint" style="margin-top:8px">Tap a column chip to show or hide it — the spreadsheet equivalent of hiding rows.</div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="ctitle">How this plan works</div>
+        <div id="method"></div>
+        <details id="notesBox"><summary>Original notes from the spreadsheet</summary><pre class="notes" id="origNotes"></pre></details>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="chead"><p class="ctitle" style="margin:0">All six plans, same assumptions</p>
+          <span class="pill" id="cmpPill"></span></div>
+        <div class="scroll" style="max-height:none"><table id="cmp"></table></div>
+        <div class="hint" style="margin-top:8px">Each plan is run at the illustration premium from the spreadsheet, using your current return rate and horizon.</div>
+      </div>
+
+      <div class="foot" id="foot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PLAN DEFINITIONS — taken from the 'Full ILP calculator' sheet.
+   Every figure here is read off the sheet's formulas, not guessed.
+   ============================================================ */
+const PLANS = {
+  APA30:{name:"APA 3.0",term:"10-Pay",min:12000,pay:10,demo:12000,rate:8,
+    wb:{1:.15,2:.18,3:.20},special:[[1,9,0],[10,20,.05],[21,999,.08]],
+    supp:.039,suppYears:10,invRate:0,invYears:[0,0],perf:0,dividends:false,
+    surrender:{1:1,2:1,3:.8,4:.7,5:.6,6:.5,7:.45,8:.35,9:.2,10:.05},
+    bullets:["Welcome bonus <b>15% / 18% / 20%</b> in years 1–3",
+             "Special bonus <b>5%</b> of annual premium years 10–20, <b>8%</b> from year 21",
+             "Supplementary charge <b>3.9% p.a.</b> for the first 10 years",
+             "No investment, performance bonus or dividends"],
+    notes:"Minimum For Policy is $12000 a year, there is no maximum, make so i can put any number beyond that as well\nThis Plan is payable for 10 years only, welcome bonuses are based on annualised premium (as shown above)\nSpecial Bonuses are 5% from years 10-20, and 8% from years 21 and beyond based on account value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.9% per year on account value and only last 10 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nMake it so i can also put ad Hoc top at any point of the policy term, have the welcome bonuses all incorporated into the calculator itself, so once i key in the premium, it auto updates if possible\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
+
+  AWV10:{name:"AWV 1.0",term:"8-Pay",min:7800,pay:8,demo:12000,rate:8,
+    wb:{1:.03,2:.05,3:.07,4:.09,5:.11},special:[],
+    supp:.036,suppYears:10,invRate:.025,invYears:[9,12],perf:.003,dividends:true,
+    surrender:{1:.7,2:.65,3:.6,4:.55,5:.5,6:.4,7:.3,8:.2,9:.1,10:.05},
+    bullets:["Welcome bonus <b>3% → 11%</b> across years 1–5",
+             "Investment bonus <b>2.5%</b> of premium, years 9–12",
+             "Performance bonus <b>0.3% p.a.</b> of policy value from year 9",
+             "Supplementary charge <b>3.6% p.a.</b> · 7% dividends available"],
+    notes:"Minimum For Policy is $7800 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 8 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 8 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 9-12 based on First year premium \nPerformace bonus of 0.3% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
+
+  PWV5:{name:"PWV 3.0",term:"5-Pay",min:18000,pay:5,demo:42000,rate:7,
+    wb:{1:.03,2:.04,3:.05},special:[],
+    supp:.036,suppYears:7,invRate:.025,invYears:[8,11],perf:.004,dividends:true,
+    surrender:{1:.6,2:.6,3:.5,4:.4,5:.3,6:.2,7:.1},
+    bullets:["Welcome bonus <b>3% / 4% / 5%</b> in years 1–3",
+             "Investment bonus <b>2.5%</b> of premium, years 8–11",
+             "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
+             "Supplementary charge <b>3.6% p.a.</b> · dividends reinvested at 7%"],
+    notes:"Minimum For Policy is $18000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 5 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 2.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3.6% per year on account value and only last 8 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
+
+  PWV2:{name:"PWV 3.0",term:"2-Pay",min:48000,pay:2,demo:138000,rate:7,
+    wb:{1:.02,2:.03},special:[],
+    supp:.029,suppYears:7,invRate:.01,invYears:[8,11],perf:.004,dividends:true,
+    surrender:{1:.6},
+    bullets:["Welcome bonus <b>2% / 3%</b> in years 1–2",
+             "Investment bonus <b>1%</b> of premium, years 8–11",
+             "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
+             "Supplementary charge <b>2.9% p.a.</b> · dividends reinvested at 7%"],
+    notes:"Minimum For Policy is $48000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 2 years only, welcome bonuses are based on annualised premium (as shown above)\nMake it also an option if i want to put more than 5 years, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 1% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAd hoc top ups are not subjected to any charges\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
+
+  SRS1:{name:"PWV 3.0",term:"1-Pay SRS",min:15000,pay:1,demo:15000,rate:7,
+    wb:{},special:[],
+    supp:.029,suppYears:7,invRate:.005,invYears:[8,11],perf:.004,dividends:true,
+    surrender:{},
+    bullets:["<b>No welcome bonus</b> on this plan",
+             "Investment bonus <b>0.5%</b> of premium, years 8–11",
+             "Performance bonus <b>0.4% p.a.</b> of policy value from year 9",
+             "Supplementary charge <b>2.9% p.a.</b> · no surrender charge"],
+    notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 0.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
+
+  EASY:{name:"Invest Easy",term:"1-Pay",min:15000,pay:1,demo:15300,rate:8,
+    wb:{},special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,dividends:false,
+    surrender:{},entryFee:.03,
+    bullets:["<b>No bonuses</b> of any kind",
+             "One-time charge of <b>3%</b> on the first premium",
+             "No annual supplementary charge",
+             "<b>No surrender charge</b> — fully liquid from day one"],
+    notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nCompletely no bonuses at all\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3% 1 time on first time premium\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nThere are no surrendar charges for this plan as well\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"}
+};
+const ORDER=["APA30","AWV10","PWV5","PWV2","SRS1","EASY"];
+
+/* ============================================================
+   ENGINE — a direct JS port of the spreadsheet formulas
+   ============================================================ */
+function specialRate(p,t){for(const [lo,hi,v] of p.special){if(t>=lo&&t<=hi)return v;}return 0;}
+
+function project(key,o){
+  const p=PLANS[key], topups=o.topups||{}, years=Math.max(1,Math.round(o.years||30));
+  const pay=Math.min(years,Math.max(1,Math.round(o.payYears||p.pay)));
+  const rate=o.rate, div=(o.dividends===undefined?p.dividends:o.dividends);
+  const exact=(o.sheetExact===undefined?true:o.sheetExact);
+  const rows=[]; let invested=0,av=0,net=0,reinv=0,divCash=0;
+  for(let t=1;t<=years;t++){
+    const b=t<=pay?o.premium:0;
+    const wb=(p.wb[t]||0)+(t===1?(o.promo||0):0);
+    const top=+(topups[t]||0);
+    const sp=specialRate(p,t)*o.premium;
+    const inv=(p.invYears[1]>=p.invYears[0]&&t>=p.invYears[0]&&t<=p.invYears[1])?p.invRate*o.premium:0;
+    const inflow=b*(1+wb)+top;
+    invested+=inflow;
+    const av0=invested+sp;
+    let charge=0,perfBonus=0;
+
+    if(key==="APA30"){
+      const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
+      const u=t<=p.suppYears?p.supp:0;
+      av=(av+base+sp)*(1+rate);
+      charge=av*u;
+      net=(net+base+sp)*(1+rate-u);
+    } else if(key==="AWV10"){
+      const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
+      const u=t<=p.suppYears?p.supp:0;
+      av=(av+base+inv)*(1+rate);
+      charge=av*u;
+      perfBonus=t>=9?p.perf*net:0;
+      net=(net+base+inv+perfBonus)*(1+rate-u);
+      divCash=div?net*0.07:0;
+      reinv=0;
+    } else if(key==="EASY"){
+      const fee=t===1?o.premium*p.entryFee:0;
+      av=(t===1)?((o.premium-fee)*(1+rate)-(exact?fee:0)):((av+b+top)*(1+rate));
+      charge=fee; net=av;
+    } else {
+      const pre=inflow+net;
+      const u=t<=p.suppYears?p.supp:0;
+      charge=pre*u;
+      perfBonus=t>=9?p.perf*net:0;
+      net=pre-charge+inv+perfBonus;
+      if(t===1) reinv=div?inflow*0.07:0;
+      else if(div) reinv=(inflow+reinv+net)*0.07+reinv;
+      else reinv=0;
+      av=net+reinv;
+    }
+    const s=p.surrender[t]||0;
+    rows.push({year:t,age:(o.ageFrom||30)+t,premium:b,wb:wb,topup:top,special:sp,
+      invBonus:inv,perfBonus:perfBonus,invested:invested,av0:av0,beforeCharges:av,
+      net:net,charge:charge,reinvested:reinv,dividend:divCash,
+      total:(key==="PWV5"||key==="PWV2"||key==="SRS1")?net+reinv:net,
+      surrender:s,cashout:(net*(1-s))+reinv});
+  }
+  const last=rows[rows.length-1];
+  const premiums=rows.reduce((a,r)=>a+r.premium,0);
+  const charges=rows.reduce((a,r)=>a+r.charge,0);
+  rows.forEach(r=>{r.cumPremiums=rows.slice(0,r.year).reduce((a,x)=>a+x.premium,0);});
+  const breakEven=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
+  return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
+    value:last.total,net:last.net,reinvested:last.reinvested,
+    profit:last.total-premiums,multiple:premiums?last.total/premiums:0,
+    breakEven:breakEven?breakEven.year:null,last}};
+}
+
+/* ---------- sheet parity check (embedded expected values) ---------- */
+const EXPECTED={"APA30":[14365.8,27446.797800000004,41064.116509800006,55239.745286701815,69996.5748434566,85358.43441203833,101350.13022293191,117997.48556207214,135327.38247011713,153992.40515139195,166959.79756350332,180964.5813685836,196089.7478780703,212424.92770831595,230066.92192498126,249120.2756789798,269697.8977332982,291921.72955196205,315923.467916119,341845.34534940857,370229.7729773613,400884.9548155502,433992.55120079423,469748.7552968578,508365.45572060643,550071.492178255,595114.0115525154,643759.9324767167,696297.5270748541,753038.1292408425],
+"AWV10":[12903.84,25999.60896,39671.59175424,53945.14179142656,68846.72803024933,84403.9840635803,100645.75936237784,117602.17277432246,123458.19838152183,129590.23018763971,140701.32094845886,152737.29890420858,165451.15166499492,179223.30552958912,194141.85348187212,210302.22136570318,227807.7782721843,246770.49773556096,267311.6739670691,289562.6977080879,313665.89666530915,339775.4459037295,368058.3540207559,398695.53140944365,431882.94744396576,467832.8839892015,506775.2932524627,548959.2686627978,594654.6381862891,644153.6902689158],
+"PWV5":[44730.84,94368.25950720001,146378.7681944448,198193.46619101407,252244.5784153167,262476.55599004694,273692.07713992463,293974.02253971936,316446.882074136,340500.4204877883,366245.3156170702,392676.49286818225,420961.02854750387,451228.67044909217,483618.2487634048,518278.3118452507,555367.8064854995,595056.80580181,637527.2880817116,682973.9701447014,731605.1990396895,783643.9061612663,839328.6281541087,898914.5992806961,962674.920254768,1030901.8088931226,1103907.9383130441,1182027.8688035496,1265619.579927625,1355066.1098716168],
+"PWV2":[146531.16,310176.2199011999,323487.7339131491,337974.6777259877,353712.2663349963,370781.184672758,389267.964563028,417993.32208244,449735.54500734946,483709.6542985191,520071.9217246332,557512.9582370763,597579.0113133572,640453.8486889765,686334.1019072239,735430.1667859887,787967.166917248,844185.9846115205,904344.3640084325,968718.0914050245,1037602.258207042,1111312.6122868154,1190187.003936194,1274586.9330361865,1364899.204528476,1461537.6997699451,1564945.2718820148,1675595.773774442,1793996.228130782,1920689.1492928343],
+"SRS1":[15615,16256.09805,16955.17957005,17715.92331146355,18542.276560802256,19438.473617686122,20409.055575320657,21917.939465593103,23585.014224175102,25369.3154918418,27279.05124933307,29242.754044540976,31344.132712244456,33592.82543022552,35999.14505217775,38574.12633503399,41329.57647220697,44278.129164156955,47433.30247389902,50809.56073239603,54422.38077732913,58288.3228285822,62425.10632501035,66851.69106978219,71588.36405589613,76656.83236948296,82080.32259633957,87883.68718692011,94093.51826687664,100738.26941433761],
+"EASY":[15569.28,16814.8224,18160.008192,19612.808847360004,21181.833555148805,22876.380239560713,24706.490658725572,26683.009911423618,28817.65070433751,31123.062760684512,33612.907781539274,36301.94040406242,39206.09563638742,42342.58328729842,45729.989950282295,49388.389146304886,53339.46027800928,57606.61710025003,62215.14646827003,67192.35818573165,72567.74684059019,78373.1665878374,84643.0199148644,91414.46150805356,98727.61842869785,106625.82790299368,115155.89413523319,124368.36566605185,134317.834919336,145063.26171288287]};
+
+function checkParity(){
+  let pass=0,total=0,bad=[];
+  for(const k of ORDER){
+    const p=PLANS[k];
+    const {rows}=project(k,{premium:p.demo,rate:p.rate/100,years:30,payYears:p.pay,
+      topups:{},promo:0,dividends:p.dividends,sheetExact:true,ageFrom:30});
+    const field=(k==="APA30"||k==="AWV10")?"net":"total";
+    rows.forEach((r,i)=>{
+      total++;
+      const e=EXPECTED[k][i];
+      if(Math.abs(r[field]-e)<0.02) pass++;
+      else if(bad.length<4) bad.push(`${k} yr${i+1}: sheet ${fmt(e)} vs app ${fmt(r[field])}`);
+    });
+  }
+  return {pass,total,bad};
+}
+
+/* ============================================================
+   FORMATTING
+   ============================================================ */
+const money=n=>{const v=Math.round(n);const s=Math.abs(v).toLocaleString("en-SG");
+  return (v<0?"−S$":"S$")+s;};
+const money2=n=>(n<0?"−S$":"S$")+Math.abs(n).toLocaleString("en-SG",{minimumFractionDigits:2,maximumFractionDigits:2});
+const short=n=>{const a=Math.abs(n),s=n<0?"−":"";
+  if(a>=1e6){const v=a/1e6;return s+"S$"+(v>=10?v.toFixed(0):String(Math.round(v*100)/100))+"m";}
+  if(a>=1e3){const v=a/1e3;return s+"S$"+(v>=100?String(Math.round(v)):String(Math.round(v*10)/10))+"k";}
+  return s+"S$"+Math.round(a);};
+const pct=n=>(n*100).toFixed(n*100%1?1:0)+"%";
+function fmt(n){return n>=0?"S$"+n.toLocaleString("en-SG",{maximumFractionDigits:0}):"−S$"+Math.abs(n).toLocaleString("en-SG",{maximumFractionDigits:0});}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
+  promo:0,topups:{},dividends:null,exact:true,hidden:new Set(),hover:null};
+
+const $=s=>document.querySelector(s);
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;};
+
+/* ---------- plan rail ---------- */
+function renderRail(){
+  const r=$("#rail");r.innerHTML="";
+  ORDER.forEach(k=>{
+    const p=PLANS[k];
+    const b=el("button","pcard"+(k===state.plan?" on":""),
+      `<div class="nm"><span>${p.name}</span><small>${p.term}</small></div>
+       <div class="mt">Illustration ${short(p.demo)}/yr</div>
+       <div class="mn">Min ${short(p.min)} · ${p.pay} yr${p.pay>1?"s":""}</div>`);
+    b.onclick=()=>{
+      state.plan=k;
+      state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
+      state.topups={};state.dividends=null;state.promo=0;
+      syncInputs();render();
+    };
+    r.appendChild(b);
+  });
+}
+
+/* ---------- inputs ---------- */
+function syncInputs(){
+  const p=PLANS[state.plan];
+  $("#premium").value=state.premium;
+  $("#premRange").value=Math.min(state.premium,200000);
+  $("#premRange").max=Math.max(200000,p.demo*2);
+  $("#payYears").value=state.payYears;
+  $("#rate").value=state.rate;
+  $("#rateRange").value=Math.max(0,Math.min(15,state.rate));
+  $("#ageFrom").value=state.ageFrom;
+  $("#ageTo").value=state.ageTo;
+  $("#promo").value=(state.promo*100).toFixed(2).replace(/\.?0+$/,"");
+  $("#premNote").textContent="min "+short(p.min);
+  $("#payNote").textContent=p.pay+" yr standard";
+  $("#rateNote").textContent="";
+  $("#promoNote").textContent="";
+  $("#divTog").className="tog"+((state.dividends===null?p.dividends:state.dividends)?" on":"");
+  $("#divTog").disabled=!p.dividends;
+  $("#divSub").textContent=p.dividends?"7% p.a. on the plan":"not available on this plan";
+  $("#exactTog").className="tog"+(state.exact?" on":"");
+  const yrs=state.ageTo-state.ageFrom;
+  $("#yearNote").textContent=`${yrs} policy years · projections out to age 100 allowed`;
+  const below=state.premium<p.min;
+  $("#premHint").innerHTML=below
+    ? `<span class="hint warn">Below the plan minimum of ${money(p.min)} — the sheet would reject this.</span>`
+    : `Illustration premium is ${money(p.demo)}.`;
+  renderTopups();
+}
+function renderTopups(){
+  const box=$("#tuList");box.innerHTML="";
+  const ks=Object.keys(state.topups).map(Number).sort((a,b)=>a-b);
+  if(!ks.length){box.innerHTML='<span class="hint">No top-ups added.</span>';return;}
+  ks.forEach(y=>{
+    const c=el("span","chipx",`Yr ${y} · ${money(state.topups[y])} <button title="remove">×</button>`);
+    c.querySelector("button").onclick=()=>{delete state.topups[y];renderTopups();render();};
+    box.appendChild(c);
+  });
+}
+
+/* ---------- KPI strip ---------- */
+function renderKpis(res){
+  const p=PLANS[state.plan],s=res.sum;
+  const box=$("#kpis");box.innerHTML="";
+  const yrs=state.ageTo-state.ageFrom;
+  const cards=[
+    {k:"Value at age "+state.ageTo,v:money(s.value),hero:true,
+     s:`after all charges${s.reinvested>0?" incl. reinvested dividends":""}`},
+    {k:"Premiums paid",v:money(s.premiums),s:`${state.payYears} year${state.payYears>1?"s":""} × ${money(state.premium)}`},
+    {k:"Profit",v:money(s.profit),cls:s.profit>=0?"up":"down",s:`${s.multiple.toFixed(2)}× the premiums paid`},
+    {k:"Total charges",v:money(s.charges),cls:"down",s:`${pct(s.chargesPct)} of premiums`},
+    {k:"Break-even",v:s.breakEven?("Year "+s.breakEven):"—",s:s.breakEven?("cashed in at age "+(state.ageFrom+s.breakEven)):"not within "+yrs+" yrs"},
+  ];
+  cards.forEach(c=>{
+    const d=el("div","kpi"+(c.hero?" hero-k":""));
+    d.innerHTML=`<div class="k">${c.k}</div><div class="v ${c.cls||""}">${c.v}</div><div class="s">${c.s||""}</div>`;
+    box.appendChild(d);
+  });
+}
+
+/* ---------- chart ---------- */
+function renderChart(res){
+  const rows=res.rows,box=$("#chartbox"),key=state.plan;
+  const W=880,H=320,pad={l:56,r:14,t:14,b:26};
+  // headline series = exactly what the KPI reports
+  const mainKey="total";
+  const gross=(key==="APA30"||key==="AWV10")?"beforeCharges":null;
+  const acct=(key==="PWV5"||key==="PWV2"||key==="SRS1")?"net":null;
+  const maxV=Math.max(...rows.map(r=>Math.max(r.total,r.cumPremiums)),1);
+  const steps=4;
+  const niceStep=x=>{const mag=Math.pow(10,Math.floor(Math.log10(x)));const n=x/mag;
+    const cands=[1,1.25,1.5,2,2.5,3,4,5,6,8,10];
+    for(const c of cands){if(c>=n*0.999)return c*mag;}return 10*mag;};
+  let step=niceStep(maxV/steps);
+  while(step*steps<maxV*1.03) step=niceStep(step*1.15);
+  const yMax=step*steps;
+  const x=i=>pad.l+(W-pad.l-pad.r)*(rows.length===1?0:i/(rows.length-1));
+  const y=v=>pad.t+(H-pad.t-pad.b)*(1-v/yMax);
+  const line=k=>rows.map((r,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(r[k]).toFixed(1)}`).join(" ");
+  const area=line(mainKey)+` L${x(rows.length-1).toFixed(1)},${y(0).toFixed(1)} L${x(0).toFixed(1)},${y(0).toFixed(1)} Z`;
+  let grid="",labels="";
+  for(let i=0;i<=steps;i++){
+    const v=yMax*i/steps,yy=y(v);
+    grid+=`<line x1="${pad.l}" x2="${W-pad.r}" y1="${yy}" y2="${yy}" stroke="var(--line)" stroke-width="1" opacity=".55"/>`;
+    labels+=`<text x="${pad.l-9}" y="${yy+3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${short(v)}</text>`;
+  }
+  const every=Math.max(1,Math.ceil(rows.length/9));
+  rows.forEach((r,i)=>{ if(i%every===0||i===rows.length-1){
+    labels+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--muted)">yr ${r.year}</text>`;}});
+  const last=rows[rows.length-1];
+  const dots=rows.length<=50?`<circle cx="${x(rows.length-1)}" cy="${y(last[mainKey])}" r="3.5" fill="var(--accent)"/>`:"";
+  box.innerHTML=`
+  <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:320px" id="svg">
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--accent)" stop-opacity=".33"/>
+      <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${grid}${labels}
+    <path d="${area}" fill="url(#g1)"/>
+    ${gross?`<path d="${line(gross)}" fill="none" stroke="var(--gold)" stroke-width="1.3" opacity=".75" stroke-dasharray="4 3"/>`:""}
+    ${acct?`<path d="${line(acct)}" fill="none" stroke="var(--twin1)" stroke-width="1.4" opacity=".85"/>`:""}
+    <path d="${line("cumPremiums")}" fill="none" stroke="var(--muted)" stroke-width="1.3" stroke-dasharray="2 3" opacity=".9"/>
+    <path d="${line(mainKey)}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>
+    ${dots}
+    <line id="xh" x1="0" x2="0" y1="${pad.t}" y2="${H-pad.b}" stroke="var(--accent)" stroke-width="1" opacity="0"/>
+    <rect x="${pad.l}" y="${pad.t}" width="${W-pad.l-pad.r}" height="${H-pad.t-pad.b}" fill="transparent" id="hit"/>
+  </svg>
+  <div class="tip" id="tip"></div>`;
+  // legend follows the series actually drawn
+  const lg=[`<span><i style="background:var(--accent)"></i>Value</span>`];
+  if(gross)lg.push(`<span><i style="background:var(--gold)"></i>Before charges</span>`);
+  if(acct)lg.push(`<span><i style="background:var(--twin1)"></i>Account only</span>`);
+  lg.push(`<span><i style="background:var(--muted)"></i>Money in (premiums)</span>`);
+  document.querySelector(".legend").innerHTML=lg.join("");
+
+  const svg=box.querySelector("#svg"),tip=box.querySelector("#tip"),xh=box.querySelector("#xh");
+  svg.addEventListener("mousemove",e=>{
+    const b=svg.getBoundingClientRect();
+    const px=(e.clientX-b.left)/b.width*W;
+    const i=Math.max(0,Math.min(rows.length-1,Math.round((px-pad.l)/((W-pad.l-pad.r)/Math.max(1,rows.length-1)))));
+    const r=rows[i];
+    xh.setAttribute("x1",x(i));xh.setAttribute("x2",x(i));xh.setAttribute("opacity",".5");
+    tip.innerHTML=`<b>Year ${r.year} · age ${r.age}</b>
+      <div class="r"><span>Value</span><span>${money(r.total)}</span></div>
+      ${r.reinvested>0?`<div class="r"><span>Account</span><span>${money(r.net)}</span></div>
+      <div class="r"><span>Reinvested div.</span><span>${money(r.reinvested)}</span></div>`:""}
+      <div class="r"><span>Money in</span><span>${money(r.cumPremiums)}</span></div>
+      <div class="r"><span>Charges</span><span>${money(r.charge)}</span></div>
+      <div class="r"><span>Cash out today</span><span>${money(r.cashout)}</span></div>`;
+    tip.style.left=(x(i)/W*b.width)+"px";
+    tip.style.top=(y(r.total)/H*b.height)+"px";
+    tip.style.opacity=1;
+  });
+  svg.addEventListener("mouseleave",()=>{tip.style.opacity=0;xh.setAttribute("opacity","0");});
+}
+
+/* ---------- bars ---------- */
+function renderBars(res){
+  const s=res.sum,p=PLANS[state.plan];
+  const items=[
+    {t:"Money in",v:s.premiums,c:"var(--muted)"},
+    {t:"Net value",v:s.net,c:"var(--accent)"},
+    {t:"Charges",v:s.charges,c:"var(--down)"},
+  ];
+  if(s.reinvested>0)items.push({t:"Reinvested acct.",v:s.reinvested,c:"var(--twin1)"});
+  if(res.rows.some(r=>r.special>0))items.push({t:"Special bonuses",v:res.rows.reduce((a,r)=>a+r.special,0),c:"var(--gold)"});
+  if(res.rows.some(r=>r.invBonus>0))items.push({t:"Investment bonus",v:res.rows.reduce((a,r)=>a+r.invBonus,0),c:"var(--twin2)"});
+  if(res.rows.some(r=>r.perfBonus>0))items.push({t:"Performance bonus",v:res.rows.reduce((a,r)=>a+r.perfBonus,0),c:"var(--up)"});
+  const max=Math.max(...items.map(i=>i.v),1);
+  $("#bars").innerHTML=items.map(i=>`<div class="bar"><span class="bt">${i.t}</span>
+    <span class="track"><span class="fill" style="width:${Math.max(1.5,i.v/max*100)}%;background:${i.c}"></span></span>
+    <span class="bv">${money(i.v)}</span></div>`).join("");
+}
+
+/* ---------- table ---------- */
+const COLS=[
+  {id:"premium",label:"Premium",get:r=>r.premium?money(r.premium):"—"},
+  {id:"wb",label:"Bonus %",get:r=>r.wb?(pct(r.wb)):"—"},
+  {id:"topup",label:"Top-up",get:r=>r.topup?money(r.topup):"—"},
+  {id:"invested",label:"Invested",get:r=>money(r.invested)},
+  {id:"bonus",label:"Bonus $",get:r=>money(r.special+r.invBonus+r.perfBonus)},
+  {id:"av0",label:"Value @0%",get:r=>money(r.av0)},
+  {id:"beforeCharges",label:"Before charges",get:r=>money(r.beforeCharges)},
+  {id:"charge",label:"Charge",get:r=>r.charge?"−"+money(r.charge):"—"},
+  {id:"net",label:"Net value",get:r=>money(r.net)},
+  {id:"reinv",label:"Div. reinvested",get:r=>r.reinvested?money(r.reinvested):"—"},
+  {id:"surr",label:"Surrender %",get:r=>r.surrender?pct(r.surrender):"—"},
+  {id:"cashout",label:"Cash out",get:r=>money(r.cashout)},
+];
+state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges","reinv"]);
+
+function renderTable(res){
+  const chips=$("#colchips");chips.innerHTML="";
+  COLS.forEach(c=>{
+    const b=el("button","cc"+(!state.hidden.has(c.id)?" on":""),c.label);
+    b.onclick=()=>{state.hidden.has(c.id)?state.hidden.delete(c.id):state.hidden.add(c.id);renderTable(res);};
+    chips.appendChild(b);
+  });
+  const cols=COLS.filter(c=>!state.hidden.has(c.id));
+  const lastBe=res.sum.breakEven;
+  let h="<thead><tr><th>Yr</th>"+cols.map(c=>`<th>${c.label}</th>`).join("")+"</tr></thead><tbody>";
+  res.rows.forEach(r=>{
+    const hl=(lastBe&&r.year===lastBe)?" class=\"hl\"":"";
+    h+=`<tr${hl}><td>${r.year}</td>`+cols.map(c=>{
+      let v=c.get(r),cls="";
+      if(c.id==="charge"&&r.charge)cls="neg";
+      if(c.id==="net")cls=r.net>=r.cumPremiums?"pos":"";
+      if(c.id==="cashout"&&r.surrender>0)cls="mut";
+      return `<td class="${cls}">${v}</td>`;}).join("")+"</tr>";
+  });
+  h+="</tbody>";
+  $("#tbl").innerHTML=h;
+}
+
+/* ---------- method ---------- */
+function renderMethod(){
+  const p=PLANS[state.plan],m=$("#method");
+  const rows=[];
+  rows.push(["Premium term",`${p.pay} year${p.pay>1?"s":""} · minimum ${money(p.min)} per year`]);
+  const wbs=Object.keys(p.wb).sort((a,b)=>a-b).map(y=>`yr ${y}: ${pct(p.wb[y])}`);
+  rows.push(["Welcome bonus",wbs.length?wbs.join(" · "):"none on this plan"]);
+  if(p.special.length)rows.push(["Special bonus",p.special.filter(s=>s[2]>0).map(s=>`${pct(s[2])} of annual premium, years ${s[1]===999?"21+":s[0]+"–"+s[1]}`).join(" · ")]);
+  if(p.invRate)rows.push(["Investment bonus",`${pct(p.invRate)} of premium paid in years ${p.invYears[0]}–${p.invYears[1]}`]);
+  if(p.perf)rows.push(["Performance bonus",`${pct(p.perf)} p.a. of policy value from year 9`]);
+  rows.push(["Supplementary charge",p.supp?`${pct(p.supp)} p.a. on account value, years 1–${p.suppYears}`:"none (one-off 3% entry charge instead)"]);
+  const sur=Object.keys(p.surrender).sort((a,b)=>a-b);
+  rows.push(["Surrender charge",sur.length?sur.map(y=>`${pct(p.surrender[y])}`).join(" → ")+" (years 1 onward)":"none at any time"]);
+  rows.push(["Dividends",p.dividends?"7% p.a., toggleable":"not applicable"]);
+  m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
+  $("#origNotes").textContent=p.notes;
+}
+
+/* ---------- compare ---------- */
+function renderCompare(){
+  const rate=state.rate/100,years=Math.max(1,state.ageTo-state.ageFrom);
+  const head=`<thead><tr><th>Plan</th><th>Term</th><th>Illustration</th><th>Premiums in</th><th>Value at age ${state.ageTo}</th><th>Multiple</th><th>Charges</th></tr></thead>`;
+  let body="<tbody>";
+  const data=ORDER.map(k=>{const p=PLANS[k];
+    const r=project(k,{premium:p.demo,rate,years,payYears:p.pay,topups:{},promo:0,
+      dividends:p.dividends,sheetExact:state.exact,ageFrom:state.ageFrom});
+    return {k,p,sum:r.sum};});
+  data.forEach(d=>{
+    const cur=d.k===state.plan;
+    body+=`<tr style="${cur?"background:color-mix(in srgb,var(--accent) 9%,transparent)":""}">
+      <td>${d.p.name}</td><td class="mut">${d.p.term}</td>
+      <td>${money(d.p.demo)}</td><td>${money(d.sum.premiums)}</td>
+      <td>${money(d.sum.value)}</td>
+      <td class="${d.sum.multiple>=1?"pos":"down"}">${d.sum.multiple.toFixed(2)}×</td>
+      <td class="mut">${pct(d.sum.chargesPct)}</td></tr>`;
+  });
+  body+="</tbody>";
+  $("#cmp").innerHTML=head+body;
+  $("#cmpPill").textContent=`${pct(rate)} p.a. · ${years} years`;
+}
+
+/* ---------- footer ---------- */
+function renderFoot(){
+  $("#foot").innerHTML=`
+  Rebuilt from the “Full ILP calculator” spreadsheet (six plan tabs). The projection engine here is a line-by-line
+  port of that sheet’s formulas — opened in <b>sheet-exact</b> mode it reproduces all 180 headline yearly values
+  to the cent, which is what the badge at the top verifies on every load.
+  <br><br>
+  Two spreadsheet quirks are visible rather than hidden: (1) APA and AWV add the welcome bonus to the account only
+  in year 1, although later years carry a bonus percentage; (2) Invest Easy charges its 3% entry fee twice in year 1.
+  Switch <b>sheet-exact</b> off to see the model behave the way the product documents read.
+  <br><br>
+  Projections use a flat assumed return and the charges of each plan as written in the sheet. This is a reference
+  illustration, <b>not advice</b>, and not a forecast — actual fund returns will vary and charges may change.`;
+  $("#assumpPill").textContent=`${pct(state.rate/100)} p.a. · ${state.ageTo-state.ageFrom} yrs · age ${state.ageFrom}→${state.ageTo}`;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render(){
+  const p=PLANS[state.plan];
+  const years=Math.max(1,state.ageTo-state.ageFrom);
+  const res=project(state.plan,{premium:state.premium,rate:state.rate/100,years,
+    payYears:state.payYears,topups:state.topups,promo:state.promo,
+    dividends:state.dividends===null?p.dividends:state.dividends,
+    sheetExact:state.exact,ageFrom:state.ageFrom});
+  renderRail();renderKpis(res);renderChart(res);renderBars(res);
+  renderTable(res);renderMethod();renderCompare();renderFoot();
+}
+
+/* ---------- wiring ---------- */
+function bind(id,fn,parse=parseFloat){
+  const e=$(id);
+  e.addEventListener("input",()=>{fn(parse(e.value));render();});
+}
+bind("#premium",v=>{state.premium=Math.max(0,v||0);$("#premRange").value=Math.min(state.premium,+$("#premRange").max);syncInputs();});
+bind("#premRange",v=>{state.premium=v;syncInputs();});
+bind("#payYears",v=>{state.payYears=Math.max(1,Math.min(40,v||1));syncInputs();});
+bind("#rate",v=>{state.rate=Math.max(-5,Math.min(20,v));$("#rateRange").value=Math.max(0,Math.min(15,state.rate));syncInputs();});
+bind("#rateRange",v=>{state.rate=v;$("#rate").value=v;syncInputs();});
+bind("#ageFrom",v=>{state.ageFrom=Math.max(0,Math.min(99,v));if(state.ageTo<=state.ageFrom)state.ageTo=Math.min(100,state.ageFrom+1);syncInputs();});
+bind("#ageTo",v=>{state.ageTo=Math.max(state.ageFrom+1,Math.min(100,v));syncInputs();});
+bind("#promo",v=>{state.promo=Math.max(0,v||0)/100;syncInputs();});
+$("#tuAdd").onclick=()=>{
+  const y=Math.round(+$("#tuYear").value||0),a=+$("#tuAmt").value||0;
+  if(y<1||y>100||a<=0){$("#tuYear").focus();return;}
+  state.topups[y]=(state.topups[y]||0)+a;
+  $("#tuYear").value="";$("#tuAmt").value="";
+  renderTopups();render();
+};
+$("#divTog").onclick=()=>{const p=PLANS[state.plan];
+  const cur=state.dividends===null?p.dividends:state.dividends;
+  state.dividends=!cur;syncInputs();render();};
+$("#exactTog").onclick=()=>{state.exact=!state.exact;syncInputs();render();};
+$("#themeBtn").onclick=()=>{
+  const h=document.documentElement;
+  h.dataset.theme=h.dataset.theme==="light"?"dark":"light";
+};
+
+/* ---------- boot ---------- */
+(function boot(){
+  const pr=checkParity();
+  const badge=$("#parity");
+  if(pr.pass===pr.total&&!pr.bad.length){
+    badge.className="pill ok";badge.textContent=`sheet parity ${pr.pass}/${pr.total} ✓`;
+  }else{
+    badge.className="pill warn";badge.textContent=`parity ${pr.pass}/${pr.total}`;
+    console.warn("Parity mismatches:",pr.bad);
+  }
+  const p=PLANS[state.plan];
+  state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
+  syncInputs();render();
+})();
+</script>
+</body>
+</html>
