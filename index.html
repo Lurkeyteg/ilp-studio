@@ -218,6 +218,9 @@ td.mut{color:var(--muted)}
   background:var(--panel2);line-height:1.5}
 .nexttier b{color:var(--accent2)}
 .wbimg{width:100%;border:1px solid var(--line);border-radius:9px;margin-top:10px;background:#fff;display:block}
+.bul{display:flex;gap:8px;font-size:12px;line-height:1.5;padding:5px 0;color:var(--txt)}
+.bul .bk{color:var(--up);font-size:11px;flex:0 0 auto;margin-top:1px}
+.bul + .bul{border-top:1px solid color-mix(in srgb,var(--line) 45%,transparent)}
 /* ---------- method / compare ---------- */
 .mrow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px}
 .mrow:first-of-type{border-top:0}
@@ -299,13 +302,13 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           <div class="hint" id="yearNote"></div>
         </div>
 
-        <div class="field">
+        <div class="field" id="promoField">
           <label>Extra welcome bonus <b id="promoNote"></b></label>
           <div class="inp"><input id="promo" type="number" min="0" max="50" step="0.5"><span class="sfx">% of yr-1 premium</span></div>
           <div class="hint">AIA promotion credit — applied once, on top of the standard welcome bonus.</div>
         </div>
 
-        <div class="field">
+        <div class="field" id="topupField">
           <label>Ad-hoc top-up</label>
           <div class="tu">
             <div class="inp"><input id="tuYear" type="number" min="1" max="100" step="1" placeholder="year"></div>
@@ -316,7 +319,7 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           <div class="hint">Top-ups are free of charges and land in the account immediately.</div>
         </div>
 
-        <div class="field">
+        <div class="field" id="divField">
           <label>Dividends <b id="divFundNote"></b></label>
           <select id="divFund" class="sel">
             <option value="none">No dividend fund</option>
@@ -333,10 +336,31 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           </div>
           <div class="hint" id="divHint"></div>
         </div>
-        <div class="sw">
+        <div class="sw" id="exactRow">
           <div>Sheet-exact model<small>Match the spreadsheet to the cent</small></div>
           <button class="tog" id="exactTog"></button>
         </div>
+      </div>
+
+      <div class="card" id="protCard" style="display:none">
+        <p class="ctitle">Cover &amp; underwriting</p>
+        <div class="field">
+          <label>Insured amount <b id="iaNote"></b></label>
+          <div class="inp"><span class="pfx">S$</span><input id="insured" type="number" step="1000" min="0"></div>
+          <div class="hint">Death benefit (Max) pays the <b>higher</b> of this amount and the policy value. The illustration used 40× the annual premium.</div>
+        </div>
+        <div class="field">
+          <label>Life insured</label>
+          <select id="sex" class="sel">
+            <option value="0">Male</option>
+            <option value="1">Female</option>
+          </select>
+        </div>
+        <div class="sw" style="border-top:0">
+          <div>Smoker<small>Raises the protection charge</small></div>
+          <button class="tog" id="smokerTog"></button>
+        </div>
+        <div class="hint" id="protHint"></div>
       </div>
 
       <div class="card">
@@ -465,6 +489,15 @@ const PLANS = {
              "Supplementary charge <b>2.9% p.a.</b> · no surrender charge"],
     notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 0.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
+  PLP2:{name:"Pro Lifetime Protector",term:"Protection ILP",min:0,pay:40,demo:1200,rate:4,
+    wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,surrender:{1:.75,2:.5},
+    protection:true,pay:40,insuredFactor:40,
+    bullets:["Unit-linked: <b>premium buys units</b>, charges are taken monthly from the policy value",
+             "Premium charge <b>80% / 55% / 50% / 8% / 0%</b> by policy year, then 2% bonus from year 10",
+             "Benefit (protection) charge on the <b>sum at risk</b>, halved in year 1",
+             "<b>$5/month</b> policy fee · fund management charge <b>1.00% p.a.</b> · surrender charge 75% then 50%"],
+    notes:"Source: AIA Pro Lifetime Protector (II) Product Summary v2.0 (092024) §3–§5 and Appendix A, plus the Policy Illustration dated 12-Nov-2026. Death Benefit Option: Max = the higher of the Insured Amount and the policy value. Policy matures at age 100. Not modelled: rider benefit charges (Total Disability Accelerator, Lifetime Critical Cover) and the PowerUp Dollar Vitality bonus, because their charge schedules and credit mechanics are not in the supplied product summary."},
+
   EASY:{name:"Invest Easy",term:"1-Pay",min:15000,pay:1,demo:15300,rate:8,
     wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,
     surrender:{},entryFee:.03,
@@ -474,7 +507,8 @@ const PLANS = {
              "<b>No surrender charge</b> — fully liquid from day one"],
     notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nCompletely no bonuses at all\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 3% 1 time on first time premium\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nThere are no surrendar charges for this plan as well\nAlso make it possible to hide certian rows for easy viewing, like excel if possible"}
 };
-const ORDER=["APA30","AWV10","PWV5","PWV2","SRS1","EASY"];
+const ORDER=["APA30","AWV10","PWV5","PWV2","SRS1","EASY","PLP2"];
+const COI_DEATH=[[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.46,0.46,0.46,0.46],[0.55,0.55,0.55,0.55],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.88,0.63,0.68,0.63],[0.89,0.63,0.68,0.63],[0.9,0.63,0.68,0.63],[0.91,0.63,0.68,0.63],[0.92,0.63,0.68,0.63],[0.93,0.63,0.68,0.63],[0.94,0.63,0.68,0.63],[0.96,0.63,0.68,0.63],[0.97,0.63,0.68,0.63],[0.99,0.63,0.68,0.63],[1.0,0.63,0.68,0.63],[1.02,0.63,0.68,0.63],[1.06,0.63,0.68,0.63],[1.08,0.63,0.68,0.63],[1.09,0.63,0.68,0.63],[1.11,0.63,0.68,0.63],[1.13,0.63,0.68,0.63],[1.13,0.63,0.68,0.63],[1.27,0.7,0.74,0.64],[1.41,0.77,0.83,0.65],[1.59,0.86,0.93,0.72],[1.76,0.95,1.05,0.8],[1.97,1.05,1.18,0.89],[2.17,1.15,1.31,0.97],[2.37,1.25,1.45,1.06],[2.59,1.36,1.59,1.15],[2.78,1.45,1.71,1.24],[3.0,1.64,1.84,1.32],[3.2,1.85,1.99,1.42],[3.6,2.09,2.13,1.52],[4.01,2.33,2.35,1.68],[4.51,2.63,2.65,1.89],[5.06,2.96,2.99,2.13],[5.66,3.33,3.39,2.42],[6.47,3.84,4.07,2.91],[7.6,4.54,4.84,3.48],[8.87,5.34,5.75,4.14],[9.81,5.97,6.47,4.68],[10.77,6.63,7.21,5.24],[11.69,7.28,7.94,5.8],[12.62,7.95,8.71,6.4],[13.49,8.63,9.46,7.0],[14.43,9.37,10.26,7.66],[15.52,10.21,11.18,8.4],[16.75,11.17,12.14,9.19],[18.35,12.4,13.18,10.04],[21.12,13.71,14.35,11.01],[23.97,15.46,15.7,12.13],[26.65,17.09,17.19,13.39],[29.28,18.87,18.88,14.84],[31.8,20.82,20.77,16.49],[34.49,22.94,22.86,18.34],[37.37,25.27,25.15,20.38],[40.43,27.81,27.62,22.55],[43.68,30.58,30.24,24.89],[47.11,33.58,33.0,27.38],[50.75,36.86,35.89,30.03],[54.85,40.42,38.99,32.92],[59.23,44.3,42.35,36.08],[63.85,48.49,45.95,39.54],[68.75,53.04,49.83,43.32],[73.92,57.95,53.99,47.44],[79.37,63.26,58.47,51.93],[85.11,69.0,63.86,57.36],[91.11,75.17,70.74,64.28],[97.4,81.81,77.89,71.38],[103.93,88.94,85.98,79.5],[110.71,96.57,93.33,87.1],[119.29,106.13,101.51,95.61],[128.39,116.57,110.48,105.06],[140.41,129.28,121.48,116.64],[155.0,144.76,134.85,130.78],[166.14,157.44,145.99,142.54],[180.24,173.37,160.02,157.29],[196.98,192.38,176.72,174.89],[209.93,206.64,188.92,188.23],[224.77,222.99,203.52,203.52],[237.78,237.78,217.44,217.44],[257.33,257.33,235.76,235.76],[278.58,278.58,255.69,255.69],[299.59,299.59,275.48,275.48],[318.29,318.29,293.2,293.2]];
 
 /* ============================================================
    ENGINE — a direct JS port of the spreadsheet formulas
@@ -507,6 +541,7 @@ function nextBonusFloor(p,premium){
 
 
 function project(key,o){
+  if(key==="PLP2") return projectPLP2(o);
   const p=PLANS[key], topups=o.topups||{}, years=Math.max(1,Math.round(o.years||30));
   const pay=Math.min(years,Math.max(1,Math.round(o.payYears||p.pay)));
   const rate=o.rate;
@@ -590,6 +625,56 @@ function project(key,o){
     breakEven:breakEven?breakEven.year:null,last}};
 }
 
+/* ---- AIA Pro Lifetime Protector (II): unit-linked, charged monthly ----
+   Premium less the year's premium charge buys units. Every month the policy value
+   is credited at the assumed return, then the $5 policy fee and the benefit charge
+   on the sum at risk are taken by cancelling units. Death benefit (Max) is the
+   higher of the Insured Amount and the policy value. */
+function projectPLP2(o){
+  const annual=o.premium, months=Math.max(1,Math.round((o.years||30)*12));
+  const insured=Math.max(0,o.insured||0);
+  const sex=o.sex===1?1:0, smoker=!!o.smoker;
+  const col=sex===0?(smoker?0:1):(smoker?2:3);
+  const premMonths=Math.round((o.premYears||30)*12);
+  const chargeFor=y=>({1:0.80,2:0.55,3:0.50,4:0.08}[y]||0);
+  const M=annual/12, rm=(o.rate||0)/12-0.01/12;   // 1.00% fund management charge
+  let pv=0, invested=0, rows=[], yr={};
+  let yPremCharge=0,yFee=0,yCoi=0,yPrem=0,yStartPv=0;
+  for(let m=1;m<=months;m++){
+    const y=Math.floor((m-1)/12)+1, age=(o.ageFrom||30)+y-1;
+    if(m===1||((m-1)%12)===0){ if(m>1){ push(y-1); } yStartPv=pv; yPremCharge=0;yFee=0;yCoi=0;yPrem=0; }
+    const prem = m<=premMonths ? M : 0;
+    const pc = prem*chargeFor(y);
+    let net = prem-pc;
+    if(m>=109) net += prem*0.02;               // 2% special bonus from the 10th annual premium
+    yPrem+=prem; yPremCharge+=pc; invested+=prem;
+    pv = pv*(1+rm) + net;
+    pv -= 5; yFee+=5;                           // $5/month policy fee
+    const sar=Math.max(0, insured-pv);
+    const rate=(COI_DEATH[Math.min(age,99)]||[0,0,0,0])[col]/1000/12;
+    const iaDisc = insured>=250000?0.92:(insured>=120000?0.95:1);  // 8% / 5% off for large cover
+    const coi=rate*sar*(y===1?0.5:1)*iaDisc;    // 50% reduction in the first policy year
+    pv=Math.max(0,pv-coi); yCoi+=coi;
+    if(m===months) push(y);
+  }
+  function push(y){
+    const sf={1:0.75,2:0.50}[y]||0;
+    rows.push({year:y,age:(o.ageFrom||30)+y,premium:Math.round(yPrem),wb:0,topup:0,special:0,
+      invBonus:0,perfBonus:0,invested:invested,av0:invested,beforeCharges:pv,
+      net:pv,total:pv,charge:yPremCharge+yFee+yCoi,premCharge:yPremCharge,policyFee:yFee,
+      coi:yCoi,death:Math.max(insured,pv),dividend:0,divCum:0,cashCum:0,divPaid:0,divReinvested:0,
+      surrender:sf,cashout:pv*(1-sf),cumPremiums:invested});
+  }
+  const last=rows[rows.length-1]||{net:0,cashout:0,cumPremiums:0};
+  const premiums=rows.reduce((a,r)=>a+r.premium,0);
+  const charges=rows.reduce((a,r)=>a+r.charge,0);
+  const be=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
+  return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
+    value:last.net,net:last.net,dividends:0,cash:0,reinvested:0,
+    profit:last.net-premiums,multiple:premiums?last.net/premiums:0,
+    breakEven:be?be.year:null,last}};
+}
+
 /* Quarterly distributions: Ex-Dates fall in Mar / Jun / Sep / Dec, so a policy
    started part-way through the year receives fewer than four in year 1. */
 const EX_MONTHS=[3,6,9,12];
@@ -611,6 +696,7 @@ const EXPECTED={"APA30":[14365.8,27446.8,41064.12,55239.75,69996.57,85358.43,101
 function checkParity(){
   let pass=0,total=0,bad=[];
   for(const k of ORDER){
+    if(!EXPECTED[k]) continue;   // plan has no spreadsheet to reconcile against
     const p=PLANS[k];
     const {rows}=project(k,{premium:p.demo,rate:p.rate/100,years:30,payYears:p.pay,
       topups:{},promo:0,divYield:0,divMode:"reinvest",startMonth:1,
@@ -644,7 +730,8 @@ function fmt(n){return n>=0?"S$"+n.toLocaleString("en-SG",{maximumFractionDigits
    ============================================================ */
 const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
   promo:0,topups:{},exact:false,hidden:new Set(),hover:null,
-  divFund:"none",divYield:0,divMode:"reinvest",startMonth:1};
+  divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
+  insured:48000,sex:0,smoker:false};
 
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;};
@@ -657,7 +744,7 @@ function renderRail(){
     const b=el("button","pcard"+(k===state.plan?" on":""),
       `<div class="nm"><span>${p.name}</span><small>${p.term}</small></div>
        <div class="mt">Illustration ${short(p.demo)}/yr</div>
-       <div class="mn">Min ${short(p.min)} · ${p.pay} yr${p.pay>1?"s":""}</div>`);
+       <div class="mn">${p.min?"Min "+short(p.min)+" · ":""}${p.pay} yr${p.pay>1?"s":""}</div>`);
     b.onclick=()=>{
       state.plan=k;
       state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
@@ -669,6 +756,8 @@ function renderRail(){
 }
 
 /* ---------- inputs ---------- */
+function isProtection(){return !!PLANS[state.plan].protection;}
+
 function syncInputs(){
   const p=PLANS[state.plan];
   $("#premium").value=state.premium;
@@ -697,8 +786,28 @@ function syncInputs(){
     b.classList.toggle("on",b.dataset.mode===state.divMode));
   renderDivHint();
   $("#exactTog").className="tog"+(state.exact?" on":"");
+  const prot=isProtection();
+  $("#protCard").style.display=prot?"":"none";
+  $("#bonusCard").style.display=prot?"none":"";
+  $("#promoField").style.display=prot?"none":"";
+  $("#topupField").style.display=prot?"none":"";
+  $("#divField").style.display=prot?"none":"";
+  $("#exactRow").style.display=prot?"none":"";
+  if(prot){
+    $("#insured").value=state.insured;
+    $("#sex").value=String(state.sex);
+    $("#smokerTog").className="tog"+(state.smoker?" on":"");
+    $("#iaNote").textContent=state.premium?`≈ ${(state.insured/state.premium).toFixed(0)}× premium`:"";
+    $("#protHint").innerHTML=`Charged monthly on the sum at risk
+      (<b>${money(Math.max(0,state.insured))}</b> less the policy value), halved in year 1.
+      Premiums are <b>${money(state.premium)}</b> a year and the charge buys units.`;
+  }
   updateYearNote();
   const below=state.premium<p.min;
+  if(isProtection()){
+    $("#premNote").textContent="no minimum stated";
+    $("#payNote").textContent="premium term";
+  }
   const band=wbBandFor(p,state.premium);
   const bandYrs=Object.keys(band.rates).sort((a,b)=>a-b);
   const bandTxt=bandYrs.length
@@ -706,6 +815,10 @@ function syncInputs(){
     : ((p.wbBands||[]).length
         ? `<b style="color:var(--gold)">No welcome bonus</b> at this premium — it starts at ${money((p.wbBands.find(b=>Object.keys(b.rates).length)||{}).min||0)}`
         : `No welcome bonus on this plan`);
+  if(isProtection()){
+    const mo=state.premium/12;
+    $("#premHint").innerHTML=`${money(mo)} a month · the year-1 premium charge is <b>80%</b>, falling to 0% from year 5`;
+  } else
   $("#premHint").innerHTML=below
     ? `<span class="hint warn">Below the plan minimum of ${money(p.min)} — the sheet would reject this.</span>`
     : `${bandTxt}`;
@@ -777,7 +890,13 @@ function renderKpis(res){
     {k:"Total charges",v:money(s.charges),cls:"down",s:`${pct(s.chargesPct)} of premiums`},
     {k:"Break-even",v:s.breakEven?("Year "+s.breakEven):"—",s:s.breakEven?("cashed in at age "+(state.ageFrom+s.breakEven)):"not within "+yrs+" yrs"},
   ];
-  if(state.divFund!=="none"){
+  if(isProtection()){
+    cards.splice(2,0,
+      {k:"Death cover",v:money(state.insured),s:"pays the higher of this and the value"},
+      {k:"Protection cost",v:money(res.rows.reduce((a,x)=>a+x.coi,0)),cls:"down",
+       s:"benefit charges to date"});
+  }
+  if(state.divFund!=="none"&&!isProtection()){
     cards.push({k:state.divMode==="cash"?"Dividends taken":"Dividends reinvested",
       v:money(s.dividends),
       s:state.divMode==="cash"?`${money(s.dividends/4)} a quarter at ${pct(state.divYield/100)}`
@@ -796,9 +915,10 @@ function renderChart(res){
   const W=880,H=320,pad={l:56,r:14,t:14,b:26};
   // headline series = exactly what the KPI reports
   const mainKey="total";
-  const gross=(key==="APA30"||key==="AWV10")?"beforeCharges":null;
-  const acct=(key==="PWV5"||key==="PWV2"||key==="SRS1")?"net":null;
-  const maxV=Math.max(...rows.map(r=>Math.max(r.total,r.cumPremiums)),1);
+  const prot=isProtection();
+  const gross=prot?"death":((key==="APA30"||key==="AWV10")?"beforeCharges":null);
+  const acct=(!prot&&(key==="PWV5"||key==="PWV2"||key==="SRS1"))?"net":null;
+  const maxV=Math.max(...rows.map(r=>Math.max(r.total,r.cumPremiums,r.death||0)),1);
   const steps=4;
   const niceStep=x=>{const mag=Math.pow(10,Math.floor(Math.log10(x)));const n=x/mag;
     const cands=[1,1.25,1.5,2,2.5,3,4,5,6,8,10];
@@ -839,8 +959,8 @@ function renderChart(res){
   </svg>
   <div class="tip" id="tip"></div>`;
   // legend follows the series actually drawn
-  const lg=[`<span><i style="background:var(--accent)"></i>Value</span>`];
-  if(gross)lg.push(`<span><i style="background:var(--gold)"></i>Before charges</span>`);
+  const lg=[`<span><i style="background:var(--accent)"></i>${prot?"Policy value":"Value"}</span>`];
+  if(gross)lg.push(`<span><i style="background:var(--gold)"></i>${prot?"Death benefit":"Before charges"}</span>`);
   if(acct)lg.push(`<span><i style="background:var(--twin1)"></i>Account only</span>`);
   lg.push(`<span><i style="background:var(--muted)"></i>Money in (premiums)</span>`);
   document.querySelector(".legend").innerHTML=lg.join("");
@@ -888,16 +1008,19 @@ function renderBars(res){
 /* ---------- table ---------- */
 const COLS=[
   {id:"premium",label:"Premium",get:r=>r.premium?money(r.premium):"—"},
-  {id:"wb",label:"Bonus %",get:r=>r.wb?(pct(r.wb)):"—"},
+  {id:"wb",label:"Bonus %",sav:1,get:r=>r.wb?(pct(r.wb)):"—"},
+  {id:"pcharge",label:"Premium chg",prot:1,get:r=>r.premCharge?"−"+money(r.premCharge):"—"},
+  {id:"coi",label:"Protection chg",prot:1,get:r=>r.coi?"−"+money(r.coi):"—"},
+  {id:"death",label:"Death benefit",prot:1,get:r=>r.death?money(r.death):"—"},
   {id:"topup",label:"Top-up",get:r=>r.topup?money(r.topup):"—"},
   {id:"invested",label:"Invested",get:r=>money(r.invested)},
-  {id:"bonus",label:"Bonus $",get:r=>money(r.special+r.invBonus+r.perfBonus)},
-  {id:"av0",label:"Value @0%",get:r=>money(r.av0)},
+  {id:"bonus",label:"Bonus $",sav:1,get:r=>money(r.special+r.invBonus+r.perfBonus)},
+  {id:"av0",label:"Value @0%",sav:1,get:r=>money(r.av0)},
   {id:"beforeCharges",label:"Before charges",get:r=>money(r.beforeCharges)},
   {id:"charge",label:"Charge",get:r=>r.charge?"−"+money(r.charge):"—"},
   {id:"net",label:"Net value",get:r=>money(r.net)},
-  {id:"div",label:"Dividend",get:r=>r.dividend?money(r.dividend):"—"},
-  {id:"divcum",label:"Div. to date",get:r=>r.divCum?money(r.divCum):"—"},
+  {id:"div",label:"Dividend",sav:1,get:r=>r.dividend?money(r.dividend):"—"},
+  {id:"divcum",label:"Div. to date",sav:1,get:r=>r.divCum?money(r.divCum):"—"},
   {id:"surr",label:"Surrender %",get:r=>r.surrender?pct(r.surrender):"—"},
   {id:"cashout",label:"Cash out",get:r=>money(r.cashout)},
 ];
@@ -905,12 +1028,14 @@ state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges"]);
 
 function renderTable(res){
   const chips=$("#colchips");chips.innerHTML="";
-  COLS.forEach(c=>{
+  const prot=isProtection();
+  const usable=c=>!(c.prot&&!prot)&&!(c.sav&&prot);
+  COLS.filter(usable).forEach(c=>{
     const b=el("button","cc"+(!state.hidden.has(c.id)?" on":""),c.label);
     b.onclick=()=>{state.hidden.has(c.id)?state.hidden.delete(c.id):state.hidden.add(c.id);renderTable(res);};
     chips.appendChild(b);
   });
-  const cols=COLS.filter(c=>!state.hidden.has(c.id));
+  const cols=COLS.filter(c=>usable(c)&&!state.hidden.has(c.id));
   const lastBe=res.sum.breakEven;
   let h="<thead><tr><th>Yr</th>"+cols.map(c=>`<th>${c.label}</th>`).join("")+"</tr></thead><tbody>";
   res.rows.forEach(r=>{
@@ -930,6 +1055,21 @@ function renderTable(res){
 function renderMethod(){
   const p=PLANS[state.plan],m=$("#method");
   const rows=[];
+  if(isProtection()){
+    rows.push(["Structure","unit-linked — the premium less its charge buys units; every charge is taken by cancelling units"]);
+    rows.push(["Premium charge","<b>80% / 55% / 50% / 8% / 0%</b> of each regular premium in policy years 1 / 2 / 3 / 4 / 5+"]);
+    rows.push(["Special bonus","<b>2%</b> of regular premiums, paid as extra units from the 10th annual premium"]);
+    rows.push(["Policy fee","<b>S$5 a month</b>, deducted by cancelling units"]);
+    rows.push(["Protection charge","annual rate per S$1,000 of <b>sum at risk</b> by attained age (Appendix A), taken monthly; halved in year 1 and reduced 5% / 8% when cover is S$120,000 / S$250,000+"]);
+    rows.push(["Fund charge","<b>1.00% p.a.</b> annual management charge (inside the unit price)"]);
+    rows.push(["Surrender charge","<b>75%</b> year 1, <b>50%</b> year 2, nil from year 3"]);
+    rows.push(["Death benefit","Option <b>Max</b> — the higher of the Insured Amount and the policy value"]);
+    rows.push(["Maturity","policy value at age 100; no-lapse guarantee for the first 10 years while premiums are paid"]);
+    rows.push(["Not modelled","rider charges (Total Disability Accelator / Lifetime Critical Cover) and the PowerUp Dollar Vitality credit — not in the supplied documents"]);
+    m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
+    $("#origNotes").textContent=p.notes;
+    return;
+  }
   rows.push(["Premium term",`${p.pay} year${p.pay>1?"s":""} · minimum ${money(p.min)} per year`]);
   const band=wbBandFor(p,state.premium);
   const bandYears=Object.keys(band.rates).sort((a,b)=>a-b);
@@ -953,6 +1093,12 @@ function renderMethod(){
 
 /* ---------- welcome bonus tiers ---------- */
 const WB_IMG={APA30:"wb-APA30.png",AWV10:"wb-AWV10.png",PWV5:"wb-PWV5.png",PWV2:"wb-PWV2.png"};
+
+function renderBullets(){
+  const p=PLANS[state.plan];
+  $("#planBullets").innerHTML=(p.bullets||[])
+    .map(b=>`<div class="bul"><span class="bk">✓</span><span>${b}</span></div>`).join("");
+}
 
 function renderBonus(){
   const p=PLANS[state.plan],band=wbBandFor(p,state.premium);
@@ -1032,6 +1178,12 @@ function renderCompare(){
 
 /* ---------- footer ---------- */
 function renderFoot(){
+  const protBit=isProtection()?`
+  <b>Pro Lifetime Protector (II)</b> is modelled from AIA's Product Summary v2.0 (092024) and its charge
+  appendices, and reconciled against the insurer's own Policy Illustration: at a 4% assumed return the
+  projection lands within about half a percent of the illustrated surrender values, and within about 2%
+  at 8%, from year 1 to year 40. No personal data from that illustration is used or stored — only the
+  charge structure. Riders and the Vitality PowerUp Dollar are not modelled.`:"";
   $("#foot").innerHTML=`
   Rebuilt from the “Full ILP calculator” spreadsheet (six plan tabs) and validated against it: with
   <b>sheet-exact</b> switched on, the engine reproduces all 180 yearly values to the cent — that is what the
@@ -1051,6 +1203,8 @@ function renderFoot(){
   started part-way through the year receives fewer than four payments in year 1. The yield is an assumption you
   set, not a promise: AIA declares the rate each quarter, distributions may be paid out of capital, and neither
   capital nor dividends are guaranteed. Use the fund's last four declared dividends for a more honest figure.
+  <br><br>
+  ${protBit}
   <br><br>
   Projections use a flat assumed return and each plan's charges as written. This is a reference illustration,
   <b>not advice</b>, and not a forecast.`;
@@ -1080,7 +1234,8 @@ function projectOpts(over){
     years:Math.max(1,state.ageTo-state.ageFrom),payYears:state.payYears,
     topups:state.topups,promo:state.promo,sheetExact:state.exact,ageFrom:state.ageFrom,
     divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
-    startMonth:state.startMonth},over||{});
+    startMonth:state.startMonth,insured:state.insured,sex:state.sex,smoker:state.smoker,
+    premYears:state.payYears},over||{});
 }
 function render(){
   const res=project(state.plan,projectOpts());
@@ -1090,7 +1245,7 @@ function render(){
     alt=project(state.plan,projectOpts({divMode:state.divMode==="cash"?"reinvest":"cash"}));
   }
   renderRail();renderKpis(res);renderChart(res);renderBars(res);
-  renderTable(res);renderMethod();renderBonus();renderCompare();renderFoot();
+  renderTable(res);renderMethod();renderBullets();renderBonus();renderCompare();renderFoot();
   renderDivHint(res,alt);
   fitSidebar();
 }
@@ -1138,6 +1293,14 @@ $("#tuAdd").onclick=()=>{
   $("#tuYear").value="";$("#tuAmt").value="";
   renderTopups();render();
 };
+$("#insured").addEventListener("input",e=>{
+  const v=parseFloat(e.target.value);state.insured=isFinite(v)?Math.max(0,v):0;
+  $("#iaNote").textContent=state.premium?`≈ ${(state.insured/state.premium).toFixed(0)}× premium`:"";
+  render();
+});
+$("#sex").addEventListener("change",e=>{state.sex=+e.target.value;render();});
+$("#smokerTog").onclick=()=>{state.smoker=!state.smoker;syncInputs();render();};
+
 $("#divFund").addEventListener("change",e=>{
   state.divFund=e.target.value;
   state.divYield=DIV_FUNDS[state.divFund].def;   // start at the fund's midpoint yield
