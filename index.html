@@ -697,8 +697,7 @@ function syncInputs(){
     b.classList.toggle("on",b.dataset.mode===state.divMode));
   renderDivHint();
   $("#exactTog").className="tog"+(state.exact?" on":"");
-  const yrs=state.ageTo-state.ageFrom;
-  $("#yearNote").textContent=`${yrs} policy years · projections out to age 100 allowed`;
+  updateYearNote();
   const below=state.premium<p.min;
   const band=wbBandFor(p,state.premium);
   const bandYrs=Object.keys(band.rates).sort((a,b)=>a-b);
@@ -734,6 +733,14 @@ function renderDivHint(lastRes,altRes){
   if(state.divYield>state.rate)
     txt+=`<br><b style="color:var(--gold)">Yield above the assumed return</b> — the excess is paid out of capital, so taking cash erodes the policy.`;
   el2.innerHTML=txt;
+}
+
+function updateYearNote(){
+  const a=state.ageFrom,t=state.ageTo,yrs=t-a;
+  const bad=yrs<1;
+  $("#yearNote").innerHTML=bad
+    ? `<span class="hint warn">“to” must be later than “from” — set an age above ${a}.</span>`
+    : `${yrs} year${yrs===1?"":"s"} of projection · ${a} → ${t} · allowed up to age 100`;
 }
 
 function renderTopups(){
@@ -1098,8 +1105,31 @@ bind("#premRange",v=>{state.premium=v;syncInputs();});
 bind("#payYears",v=>{state.payYears=Math.max(1,Math.min(40,v||1));syncInputs();});
 bind("#rate",v=>{state.rate=Math.max(-5,Math.min(20,v));$("#rateRange").value=Math.max(0,Math.min(15,state.rate));syncInputs();});
 bind("#rateRange",v=>{state.rate=v;$("#rate").value=v;syncInputs();});
-bind("#ageFrom",v=>{state.ageFrom=Math.max(0,Math.min(99,v));if(state.ageTo<=state.ageFrom)state.ageTo=Math.min(100,state.ageFrom+1);syncInputs();});
-bind("#ageTo",v=>{state.ageTo=Math.max(state.ageFrom+1,Math.min(100,v));syncInputs();});
+/* Ages are typed, not steered: while the field is being edited the number is taken
+   as-is (no clamping between keystrokes, no writing the value back into the box —
+   which is what made "100" collapse to 31). Anything invalid is corrected on blur. */
+function wireAge(sel,key,min,max){
+  const box=$(sel);
+  box.addEventListener("input",()=>{
+    const raw=box.value.trim();
+    if(raw===""){updateYearNote();return;}          // let the field be empty mid-edit
+    const v=parseInt(raw,10);
+    if(!isFinite(v))return;
+    state[key]=Math.max(0,Math.min(max,v));
+    updateYearNote();
+    render();
+  });
+  box.addEventListener("blur",()=>{
+    let v=parseInt(box.value,10);
+    if(!isFinite(v))v=state[key];
+    state[key]=Math.max(min,Math.min(max,v));
+    if(state.ageTo<=state.ageFrom)state.ageTo=Math.min(100,state.ageFrom+1);
+    syncInputs();render();
+  });
+  box.addEventListener("keydown",e=>{if(e.key==="Enter")box.blur();});
+}
+wireAge("#ageFrom","ageFrom",0,99);
+wireAge("#ageTo","ageTo",1,100);
 bind("#promo",v=>{state.promo=Math.max(0,v||0)/100;syncInputs();});
 $("#tuAdd").onclick=()=>{
   const y=Math.round(+$("#tuYear").value||0),a=+$("#tuAmt").value||0;
