@@ -356,9 +356,36 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
             <option value="1">Female</option>
           </select>
         </div>
-        <div class="sw" style="border-top:0">
+        <div class="sw">
           <div>Smoker<small>Raises the protection charge</small></div>
           <button class="tog" id="smokerTog"></button>
+        </div>
+        <div class="field">
+          <label>Premium frequency</label>
+          <select id="perYear" class="sel">
+            <option value="1">Annual</option>
+            <option value="2">Semi-annual</option>
+            <option value="4">Quarterly</option>
+            <option value="12">Monthly</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fund management charge <b id="amcNote"></b></label>
+          <div class="inp"><input id="amc" type="number" step="0.05" min="0" max="3"><span class="sfx">% p.a.</span></div>
+        </div>
+        <p class="ctitle" style="margin:16px 0 10px">Optional riders</p>
+        <div class="field">
+          <label>Total Disability Accelerator <b id="tpdNote"></b></label>
+          <div class="inp"><span class="pfx">S$</span><input id="tpdCover" type="number" step="10000" min="0"></div>
+          <div class="hint">Set to 0 to exclude. Cover runs to age 70.</div>
+        </div>
+        <div class="field">
+          <label>Lifetime Critical Cover <b id="lccNote"></b></label>
+          <div class="inp"><span class="pfx">S$</span><input id="lccCover" type="number" step="10000" min="0"></div>
+        </div>
+        <div class="field">
+          <label>Relapse Benefit <b id="relNote"></b></label>
+          <div class="inp"><span class="pfx">S$</span><input id="relCover" type="number" step="10000" min="0"></div>
         </div>
         <div class="hint" id="protHint"></div>
       </div>
@@ -489,12 +516,13 @@ const PLANS = {
              "Supplementary charge <b>2.9% p.a.</b> · no surrender charge"],
     notes:"Minimum For Policy is $15000 a year, there is no maximum, make so i can put any number above it as well\nThis Plan is payable for 1 years only, there are no welcome bonuses for this plan\nMake it also an option if i want to put more than 1 year, also another column for ad hoc top up that will add to the account value \nInvestment Bonuses are 0.5% from years 8-11 based on First year premium \nPerformace bonus of 0.4% per annum of policy value\nStretch the Plan to 100 years old as well\nThere is a supplementary charge of 2.9% per year on account value and only last 7 years\nRetuns figure should be changeable (Like 8% or 5% or wtv)\nReturns are calculated as 100% (Current Account value- Supplementary charge) X Rate of return = New Account Value\nInclude Surrender charges table as well, in the scenario i want to\nThis plan has access to dividends so make it an option to show the 7% dividends as i show here\nIf not receiveing dividends then make it an option to follow the rate of return as written below\nAlso include a part for me to include additional welcome bonus like ad hoc due to AIA promotions \nAlso make it possible to hide certian rows for easy viewing, like excel if possible"},
 
-  PLP2:{name:"Pro Lifetime Protector",term:"Protection ILP",min:0,pay:40,demo:1200,rate:4,
+  PLP2:{name:"Pro Lifetime Protector",term:"Protection ILP",min:0,pay:40,demo:3200,rate:4,
+    demoInsured:300000,demoTpd:300000,demoLcc:100000,demoRel:100000,demoAmc:1.5,demoPerYear:1,demoFrom:26,demoTo:66,
     wbBands:[],special:[],supp:0,suppYears:0,invRate:0,invYears:[0,0],perf:0,surrender:{1:.75,2:.5},
     protection:true,pay:40,insuredFactor:40,
-    bullets:["Unit-linked: <b>premium buys units</b>, charges are taken monthly from the policy value",
+    bullets:["<b>80% of the year-1 premium goes to charges, 20% buys units</b> — 100% is invested from year 5, 102% from year 10",
              "Premium charge <b>80% / 55% / 50% / 8% / 0%</b> by policy year, then 2% bonus from year 10",
-             "Benefit (protection) charge on the <b>sum at risk</b>, halved in year 1",
+             "Death cover <b>+ optional TPD, Lifetime Critical Cover and Relapse</b> riders, charged on the sum at risk",
              "<b>$5/month</b> policy fee · fund management charge <b>1.00% p.a.</b> · surrender charge 75% then 50%"],
     notes:"Source: AIA Pro Lifetime Protector (II) Product Summary v2.0 (092024) §3–§5 and Appendix A, plus the Policy Illustration dated 12-Nov-2026. Death Benefit Option: Max = the higher of the Insured Amount and the policy value. Policy matures at age 100. Not modelled: rider benefit charges (Total Disability Accelerator, Lifetime Critical Cover) and the PowerUp Dollar Vitality bonus, because their charge schedules and credit mechanics are not in the supplied product summary."},
 
@@ -509,6 +537,9 @@ const PLANS = {
 };
 const ORDER=["APA30","AWV10","PWV5","PWV2","SRS1","EASY","PLP2"];
 const COI_DEATH=[[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.43,0.43,0.43,0.43],[0.46,0.46,0.46,0.46],[0.55,0.55,0.55,0.55],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.63,0.63,0.63,0.63],[0.88,0.63,0.68,0.63],[0.89,0.63,0.68,0.63],[0.9,0.63,0.68,0.63],[0.91,0.63,0.68,0.63],[0.92,0.63,0.68,0.63],[0.93,0.63,0.68,0.63],[0.94,0.63,0.68,0.63],[0.96,0.63,0.68,0.63],[0.97,0.63,0.68,0.63],[0.99,0.63,0.68,0.63],[1.0,0.63,0.68,0.63],[1.02,0.63,0.68,0.63],[1.06,0.63,0.68,0.63],[1.08,0.63,0.68,0.63],[1.09,0.63,0.68,0.63],[1.11,0.63,0.68,0.63],[1.13,0.63,0.68,0.63],[1.13,0.63,0.68,0.63],[1.27,0.7,0.74,0.64],[1.41,0.77,0.83,0.65],[1.59,0.86,0.93,0.72],[1.76,0.95,1.05,0.8],[1.97,1.05,1.18,0.89],[2.17,1.15,1.31,0.97],[2.37,1.25,1.45,1.06],[2.59,1.36,1.59,1.15],[2.78,1.45,1.71,1.24],[3.0,1.64,1.84,1.32],[3.2,1.85,1.99,1.42],[3.6,2.09,2.13,1.52],[4.01,2.33,2.35,1.68],[4.51,2.63,2.65,1.89],[5.06,2.96,2.99,2.13],[5.66,3.33,3.39,2.42],[6.47,3.84,4.07,2.91],[7.6,4.54,4.84,3.48],[8.87,5.34,5.75,4.14],[9.81,5.97,6.47,4.68],[10.77,6.63,7.21,5.24],[11.69,7.28,7.94,5.8],[12.62,7.95,8.71,6.4],[13.49,8.63,9.46,7.0],[14.43,9.37,10.26,7.66],[15.52,10.21,11.18,8.4],[16.75,11.17,12.14,9.19],[18.35,12.4,13.18,10.04],[21.12,13.71,14.35,11.01],[23.97,15.46,15.7,12.13],[26.65,17.09,17.19,13.39],[29.28,18.87,18.88,14.84],[31.8,20.82,20.77,16.49],[34.49,22.94,22.86,18.34],[37.37,25.27,25.15,20.38],[40.43,27.81,27.62,22.55],[43.68,30.58,30.24,24.89],[47.11,33.58,33.0,27.38],[50.75,36.86,35.89,30.03],[54.85,40.42,38.99,32.92],[59.23,44.3,42.35,36.08],[63.85,48.49,45.95,39.54],[68.75,53.04,49.83,43.32],[73.92,57.95,53.99,47.44],[79.37,63.26,58.47,51.93],[85.11,69.0,63.86,57.36],[91.11,75.17,70.74,64.28],[97.4,81.81,77.89,71.38],[103.93,88.94,85.98,79.5],[110.71,96.57,93.33,87.1],[119.29,106.13,101.51,95.61],[128.39,116.57,110.48,105.06],[140.41,129.28,121.48,116.64],[155.0,144.76,134.85,130.78],[166.14,157.44,145.99,142.54],[180.24,173.37,160.02,157.29],[196.98,192.38,176.72,174.89],[209.93,206.64,188.92,188.23],[224.77,222.99,203.52,203.52],[237.78,237.78,217.44,217.44],[257.33,257.33,235.76,235.76],[278.58,278.58,255.69,255.69],[299.59,299.59,275.48,275.48],[318.29,318.29,293.2,293.2]];
+const COI_TPD=[[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.07,0.07,0.06,0.06],[0.08,0.07,0.08,0.06],[0.09,0.07,0.08,0.06],[0.09,0.08,0.08,0.07],[0.1,0.08,0.09,0.07],[0.1,0.08,0.09,0.07],[0.1,0.08,0.09,0.08],[0.11,0.09,0.1,0.08],[0.11,0.09,0.1,0.08],[0.11,0.09,0.1,0.08],[0.12,0.1,0.11,0.09],[0.12,0.1,0.11,0.09],[0.12,0.1,0.11,0.09],[0.13,0.1,0.12,0.09],[0.13,0.11,0.12,0.1],[0.13,0.11,0.12,0.1],[0.14,0.11,0.13,0.1],[0.14,0.12,0.13,0.11],[0.15,0.12,0.14,0.11],[0.16,0.13,0.14,0.11],[0.16,0.13,0.15,0.12],[0.17,0.14,0.16,0.13],[0.18,0.15,0.17,0.13],[0.19,0.16,0.18,0.14],[0.21,0.17,0.19,0.15],[0.23,0.19,0.21,0.17],[0.25,0.2,0.23,0.18],[0.27,0.22,0.25,0.2],[0.3,0.25,0.27,0.22],[0.33,0.27,0.3,0.24],[0.37,0.3,0.33,0.27],[0.41,0.34,0.37,0.3],[0.46,0.37,0.42,0.33],[0.51,0.42,0.46,0.37],[0.57,0.47,0.52,0.42],[0.64,0.52,0.58,0.46],[0.71,0.58,0.65,0.52],[0.79,0.65,0.72,0.58],[0.88,0.72,0.8,0.64],[0.98,0.81,0.89,0.72],[1.1,0.9,1.0,0.8],[1.22,1.0,1.11,0.89],[1.35,1.11,1.23,0.98],[1.49,1.22,1.36,1.09],[1.66,1.36,1.51,1.21],[1.83,1.5,1.67,1.34],[2.03,1.66,1.85,1.48],[2.25,1.84,2.05,1.64],[2.49,2.04,2.27,1.82],[2.77,2.26,2.51,2.01],[3.06,2.51,2.78,2.23],[3.39,2.78,3.09,2.47],[3.76,3.08,3.42,2.74]];
+const COI_LCC=[[3.76,3.67,3.55,3.52],[3.33,3.25,3.16,3.13],[2.92,2.85,2.76,2.74],[2.54,2.48,2.41,2.39],[2.22,2.17,2.14,2.12],[1.96,1.91,1.93,1.91],[1.77,1.73,1.78,1.76],[1.65,1.61,1.67,1.65],[1.6,1.56,1.59,1.57],[1.61,1.57,1.52,1.51],[1.67,1.6,1.48,1.47],[1.76,1.73,1.46,1.45],[1.88,1.86,1.47,1.46],[2.04,2.03,1.51,1.5],[2.24,2.23,1.6,1.56],[2.53,2.34,1.73,1.64],[2.96,2.4,1.87,1.69],[3.31,2.47,2.03,1.75],[3.65,2.54,2.2,1.8],[3.95,2.6,2.5,1.83],[4.1,2.67,2.84,1.86],[4.17,2.73,3.15,1.89],[4.2,2.8,3.38,1.91],[4.21,2.87,3.55,1.93],[4.22,2.93,3.65,1.95],[4.25,3.0,3.74,1.97],[4.3,3.06,3.83,2.01],[4.38,3.13,3.96,2.08],[4.48,3.2,4.17,2.18],[4.6,3.26,4.46,2.33],[4.74,3.33,4.85,2.52],[4.91,3.39,5.33,2.76],[5.11,3.55,5.89,3.05],[5.34,3.7,6.52,3.39],[5.6,3.85,7.18,3.77],[5.9,4.01,7.86,4.18],[6.25,4.16,8.56,4.62],[6.64,4.31,9.27,5.07],[7.09,4.46,10.03,5.51],[7.57,4.76,10.91,5.93],[8.08,5.11,12.04,6.3],[8.2,5.55,12.55,6.75],[8.31,5.98,13.23,7.05],[8.43,6.42,13.57,7.35],[8.54,6.85,13.69,7.65],[9.3,7.4,14.63,7.94],[10.94,8.07,16.15,8.24],[13.19,8.82,18.04,9.39],[15.83,9.63,20.13,10.63],[18.69,10.5,22.3,11.88],[21.64,11.41,24.46,13.07],[24.59,12.36,26.53,14.15],[27.49,13.36,28.49,15.1],[30.3,14.43,30.3,15.9],[33.03,15.58,31.98,16.57],[35.68,16.82,33.53,17.12],[38.31,18.17,35.0,17.58],[40.95,19.66,36.41,17.98],[43.68,21.31,37.83,18.37],[46.56,23.13,39.31,18.8],[49.67,25.16,40.9,19.31],[53.09,27.41,42.68,19.97],[56.9,29.9,44.7,20.82],[61.18,32.65,47.04,21.92],[66.0,35.69,49.75,23.33],[71.44,39.01,52.89,25.08],[77.56,42.65,56.53,27.23],[84.43,46.61,60.7,29.82],[92.07,50.9,65.45,32.89],[100.55,55.53,70.82,36.48],[109.88,60.5,76.85,40.61],[120.08,65.82,83.56,45.3],[131.16,71.5,90.96,50.59],[143.11,77.52,99.08,56.47],[155.93,83.9,107.92,62.97],[169.58,90.64,117.48,70.09],[184.03,97.73,127.76,77.82],[199.23,105.17,138.76,86.18],[215.13,112.97,150.46,95.16],[231.67,121.13,162.86,104.76],[248.78,129.66,175.95,114.97],[266.4,138.56,189.73,125.79],[284.46,147.84,204.17,137.22],[302.87,157.53,219.3,149.28],[321.57,167.65,235.12,161.96],[340.5,178.22,251.64,175.28],[359.59,189.29,268.91,189.28],[378.8,200.89,286.95,203.99],[398.08,213.09,305.85,219.47],[417.43,225.95,325.69,235.77],[436.84,239.56,346.57,252.99],[456.34,253.99,368.63,271.22],[475.97,269.37,392.03,290.6],[495.82,285.82,416.98,311.29],[516.0,303.48,443.72,333.45],[536.68,322.52,472.53,357.32],[558.05,343.11,503.74,383.14],[580.37,365.46,537.72,411.19],[603.95,389.81,574.9,441.8],[629.15,416.42,615.79,475.35]];
+const COI_REL=[[0.76,0.73,0.71,0.71],[0.67,0.65,0.63,0.62],[0.59,0.57,0.55,0.54],[0.51,0.5,0.49,0.48],[0.44,0.43,0.42,0.42],[0.39,0.38,0.38,0.38],[0.35,0.34,0.35,0.35],[0.33,0.33,0.33,0.33],[0.32,0.31,0.31,0.31],[0.32,0.31,0.31,0.3],[0.33,0.32,0.3,0.29],[0.35,0.34,0.29,0.29],[0.38,0.37,0.29,0.29],[0.41,0.4,0.3,0.3],[0.45,0.44,0.32,0.32],[0.5,0.47,0.34,0.33],[0.59,0.49,0.37,0.34],[0.66,0.5,0.41,0.34],[0.73,0.5,0.44,0.36],[0.79,0.52,0.5,0.36],[0.82,0.53,0.57,0.37],[0.83,0.55,0.63,0.38],[0.84,0.56,0.68,0.38],[0.84,0.57,0.71,0.38],[0.85,0.59,0.73,0.38],[0.85,0.6,0.74,0.4],[0.87,0.62,0.76,0.41],[0.87,0.63,0.79,0.42],[0.89,0.64,0.83,0.44],[0.92,0.65,0.89,0.46],[0.95,0.66,0.96,0.5],[0.99,0.68,1.06,0.55],[1.02,0.71,1.18,0.61],[1.07,0.74,1.3,0.67],[1.12,0.77,1.44,0.75],[1.18,0.8,1.58,0.84],[1.25,0.83,1.71,0.92],[1.33,0.86,1.85,1.01],[1.41,0.9,2.01,1.1],[1.51,0.95,2.19,1.18],[1.62,1.03,2.41,1.26],[1.64,1.11,2.51,1.36],[1.67,1.2,2.64,1.41],[1.68,1.28,2.71,1.47],[1.71,1.37,2.74,1.53],[1.86,1.48,2.93,1.59],[2.19,1.61,3.23,1.65],[2.64,1.76,3.6,1.88],[3.17,1.93,4.02,2.13],[3.74,2.1,4.46,2.38],[4.33,2.28,4.89,2.62],[4.92,2.47,5.31,2.83],[5.5,2.68,5.69,3.02],[6.06,2.89,6.06,3.18],[6.6,3.11,6.39,3.32],[7.14,3.36,6.71,3.42],[7.66,3.64,7.0,3.51],[8.19,3.93,7.29,3.6],[8.74,4.26,7.57,3.67],[9.31,4.63,7.86,3.76],[9.94,5.03,8.18,3.87],[10.62,5.48,8.53,3.99],[11.38,5.98,8.94,4.17],[12.23,6.53,9.41,4.39],[13.2,7.13,9.95,4.66],[14.29,7.81,10.58,5.02],[15.52,8.53,11.3,5.45],[16.88,9.32,12.13,5.97],[18.42,10.18,13.09,6.58],[20.11,11.1,14.17,7.3],[21.97,12.1,15.37,8.12],[24.01,13.17,16.71,9.07],[26.23,14.29,18.19,10.11],[28.63,15.51,19.82,11.3],[31.19,16.78,21.58,12.59],[33.91,18.13,23.5,14.01],[36.8,19.54,25.55,15.57],[39.84,21.04,27.75,17.24],[43.02,22.6,30.1,19.03],[46.33,24.23,32.58,20.95],[49.76,25.93,35.19,22.99],[53.29,27.71,37.94,25.16],[56.89,29.57,40.84,27.45],[60.57,31.51,43.86,29.85],[64.31,33.53,47.02,32.39],[68.1,35.65,50.33,35.06],[71.92,37.85,53.78,37.86],[75.75,40.18,57.4,40.8],[79.62,42.62,61.17,43.89],[83.49,45.19,65.14,47.15],[87.37,47.91,69.31,50.59],[91.27,50.8,73.72,54.24],[95.2,53.88,78.41,58.12],[99.16,57.17,83.4,62.25],[103.2,60.7,88.75,66.7],[107.34,64.5,94.51,71.47],[111.61,68.62,100.74,76.62],[116.08,73.09,107.54,82.23],[120.79,77.96,114.98,88.36],[125.82,83.28,123.16,95.07]];
 
 /* ============================================================
    ENGINE — a direct JS port of the spreadsheet formulas
@@ -631,41 +662,62 @@ function project(key,o){
    on the sum at risk are taken by cancelling units. Death benefit (Max) is the
    higher of the Insured Amount and the policy value. */
 function projectPLP2(o){
-  const annual=o.premium, months=Math.max(1,Math.round((o.years||30)*12));
-  const insured=Math.max(0,o.insured||0);
+  const prem=Math.max(0,o.premium||0), years=Math.max(1,Math.round(o.years||30));
+  const insured=Math.max(0,o.insured||0), age0=o.ageFrom||30;
   const sex=o.sex===1?1:0, smoker=!!o.smoker;
   const col=sex===0?(smoker?0:1):(smoker?2:3);
-  const premMonths=Math.round((o.premYears||30)*12);
-  const chargeFor=y=>({1:0.80,2:0.55,3:0.50,4:0.08}[y]||0);
-  const M=annual/12, rm=(o.rate||0)/12-0.01/12;   // 1.00% fund management charge
-  let pv=0, invested=0, rows=[], yr={};
-  let yPremCharge=0,yFee=0,yCoi=0,yPrem=0,yStartPv=0;
-  for(let m=1;m<=months;m++){
-    const y=Math.floor((m-1)/12)+1, age=(o.ageFrom||30)+y-1;
-    if(m===1||((m-1)%12)===0){ if(m>1){ push(y-1); } yStartPv=pv; yPremCharge=0;yFee=0;yCoi=0;yPrem=0; }
-    const prem = m<=premMonths ? M : 0;
-    const pc = prem*chargeFor(y);
-    let net = prem-pc;
-    if(m>=109) net += prem*0.02;               // 2% special bonus from the 10th annual premium
-    yPrem+=prem; yPremCharge+=pc; invested+=prem;
-    pv = pv*(1+rm) + net;
-    pv -= 5; yFee+=5;                           // $5/month policy fee
-    const sar=Math.max(0, insured-pv);
-    const rate=(COI_DEATH[Math.min(age,99)]||[0,0,0,0])[col]/1000/12;
-    const iaDisc = insured>=250000?0.92:(insured>=120000?0.95:1);  // 8% / 5% off for large cover
-    const coi=rate*sar*(y===1?0.5:1)*iaDisc;    // 50% reduction in the first policy year
-    pv=Math.max(0,pv-coi); yCoi+=coi;
-    if(m===months) push(y);
+  const perYear=[1,2,4,12].includes(o.perYear)?o.perYear:1;
+  const amc=Math.max(0,(o.amc===undefined?0.015:o.amc));
+  const tpdCover=Math.max(0,o.tpdCover||0), lccCover=Math.max(0,o.lccCover||0), relCover=Math.max(0,o.relCover||0);
+  const premMonths=Math.round((o.premYears||years)*12);
+  const step=12/perYear, perPrem=prem/perYear;
+  // premium charge bands, expressed in NUMBER OF REGULAR PREMIUMS paid
+  const bands=perYear===1?[[1,.80],[2,.55],[3,.50],[4,.08]]
+            :perYear===2?[[2,.80],[4,.55],[6,.50],[8,.08]]
+            :perYear===4?[[4,.80],[8,.55],[12,.50],[16,.08]]
+                        :[[12,.80],[24,.55],[36,.50],[48,.08]];
+  const chargeFor=n=>{for(const [upto,p] of bands){if(n<=upto)return p;}return 0;};
+  const f=(1+(o.rate||0)-amc)**(1/12);          // fund growth net of the management charge
+  let pv=0, paid=0, invested=0, rows=[];
+  let yPrem=0,yPc=0,yFee=0,yCoi=0,yTpd=0,yLcc=0,yRel=0;
+  for(let m=1;m<=years*12;m++){
+    const y=Math.floor((m-1)/12)+1, age=age0+y-1;
+    if((m-1)%12===0){
+      if(m>1) push(y-1);
+      yPrem=0;yPc=0;yFee=0;yCoi=0;yTpd=0;yLcc=0;yRel=0;   // reset the yearly buckets
+    }
+    let credit=0;
+    if(m<=premMonths && ((m-1)%step===0)){
+      paid++;
+      const pc=perPrem*chargeFor(paid);
+      credit=perPrem-pc; yPc+=pc; yPrem+=perPrem; invested+=perPrem;
+      if(paid>=10*perYear){ credit+=perPrem*0.02; }   // 2% special bonus from the 10th annual premium
+    }
+    pv = pv*f + credit;
+    pv -= 5; yFee+=5;                                   // $5/month policy fee
+    const sar=Math.max(0,insured-pv);
+    const disc=insured>=250000?0.92:(insured>=120000?0.95:1);
+    const y1=(y===1?0.5:1);                             // 50% reduction on all benefit charges in year 1
+    const cDeath=(COI_DEATH[Math.min(age,99)]||[0,0,0,0])[col]/1000/12*sar*disc*y1;
+    const cTpd=(tpdCover&&age<age0+44)?(COI_TPD[Math.min(age,69)]||[0,0,0,0])[col]/1000/12*Math.max(0,tpdCover-pv)*y1:0;
+    const cLcc=lccCover?(COI_LCC[Math.min(age,99)]||[0,0,0,0])[col]/1000/12*lccCover*y1:0;
+    const cRel=relCover?(COI_REL[Math.min(age,99)]||[0,0,0,0])[col]/1000/12*relCover*y1:0;
+    const tot=cDeath+cTpd+cLcc+cRel;
+    yCoi+=tot; yTpd+=cTpd; yLcc+=cLcc; yRel+=cRel;
+    pv=Math.max(0,pv-tot);
+    if(m===years*12) push(y);
   }
   function push(y){
     const sf={1:0.75,2:0.50}[y]||0;
-    rows.push({year:y,age:(o.ageFrom||30)+y,premium:Math.round(yPrem),wb:0,topup:0,special:0,
+    const riders=tpdCover+lccCover+relCover;
+    rows.push({year:y,age:age0+y,premium:Math.round(yPrem),wb:0,topup:0,special:0,
       invBonus:0,perfBonus:0,invested:invested,av0:invested,beforeCharges:pv,
-      net:pv,total:pv,charge:yPremCharge+yFee+yCoi,premCharge:yPremCharge,policyFee:yFee,
-      coi:yCoi,death:Math.max(insured,pv),dividend:0,divCum:0,cashCum:0,divPaid:0,divReinvested:0,
+      net:pv,total:pv,charge:yPc+yFee+yCoi,premCharge:yPc,policyFee:yFee,
+      coi:yCoi,coiTpd:yTpd,coiLcc:yLcc,coiRel:yRel,
+      death:Math.max(insured,pv),dividend:0,divCum:0,cashCum:0,divPaid:0,divReinvested:0,
       surrender:sf,cashout:pv*(1-sf),cumPremiums:invested});
   }
-  const last=rows[rows.length-1]||{net:0,cashout:0,cumPremiums:0};
+  const last=rows[rows.length-1]||{net:0,cashout:0,cumPremiums:0,death:0};
   const premiums=rows.reduce((a,r)=>a+r.premium,0);
   const charges=rows.reduce((a,r)=>a+r.charge,0);
   const be=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
@@ -731,7 +783,8 @@ function fmt(n){return n>=0?"S$"+n.toLocaleString("en-SG",{maximumFractionDigits
 const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
   promo:0,topups:{},exact:false,hidden:new Set(),hover:null,
   divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
-  insured:48000,sex:0,smoker:false};
+  insured:300000,sex:0,smoker:false,
+  perYear:1,amc:1.5,tpdCover:300000,lccCover:100000,relCover:100000};
 
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;};
@@ -749,6 +802,12 @@ function renderRail(){
       state.plan=k;
       state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
       state.topups={};state.promo=0;
+      state.ageFrom=p.demoFrom||30; state.ageTo=p.demoTo||60;
+      if(p.protection){
+        state.insured=p.demoInsured;state.tpdCover=p.demoTpd;
+        state.lccCover=p.demoLcc;state.relCover=p.demoRel;
+        state.amc=p.demoAmc;state.perYear=p.demoPerYear;
+      }
       syncInputs();render();
     };
     r.appendChild(b);
@@ -798,9 +857,18 @@ function syncInputs(){
     $("#sex").value=String(state.sex);
     $("#smokerTog").className="tog"+(state.smoker?" on":"");
     $("#iaNote").textContent=state.premium?`≈ ${(state.insured/state.premium).toFixed(0)}× premium`:"";
-    $("#protHint").innerHTML=`Charged monthly on the sum at risk
-      (<b>${money(Math.max(0,state.insured))}</b> less the policy value), halved in year 1.
-      Premiums are <b>${money(state.premium)}</b> a year and the charge buys units.`;
+    $("#perYear").value=String(state.perYear);
+    $("#amc").value=state.amc;
+    $("#tpdCover").value=state.tpdCover;
+    $("#lccCover").value=state.lccCover;
+    $("#relCover").value=state.relCover;
+    $("#amcNote").textContent="";
+    $("#tpdNote").textContent=state.tpdCover?money(state.tpdCover):"excluded";
+    $("#lccNote").textContent=state.lccCover?money(state.lccCover):"excluded";
+    $("#relNote").textContent=state.relCover?money(state.relCover):"excluded";
+    $("#protHint").innerHTML=`<b>Year 1: 80% of the premium goes to charges, 20% buys units.</b>
+      From year 5 every dollar is invested, and from year 10 you get 102%.
+      Protection charges come out of the policy monthly, on the cover not yet funded by the policy value.`;
   }
   updateYearNote();
   const below=state.premium<p.min;
@@ -1060,12 +1128,17 @@ function renderMethod(){
     rows.push(["Premium charge","<b>80% / 55% / 50% / 8% / 0%</b> of each regular premium in policy years 1 / 2 / 3 / 4 / 5+"]);
     rows.push(["Special bonus","<b>2%</b> of regular premiums, paid as extra units from the 10th annual premium"]);
     rows.push(["Policy fee","<b>S$5 a month</b>, deducted by cancelling units"]);
+    rows.push(["Premium frequency",{1:"annual",2:"semi-annual",4:"quarterly",12:"monthly"}[state.perYear]+" — the charge bands are counted in premiums paid, so frequency does not change the total"]);
     rows.push(["Protection charge","annual rate per S$1,000 of <b>sum at risk</b> by attained age (Appendix A), taken monthly; halved in year 1 and reduced 5% / 8% when cover is S$120,000 / S$250,000+"]);
-    rows.push(["Fund charge","<b>1.00% p.a.</b> annual management charge (inside the unit price)"]);
+    if(state.tpdCover)rows.push(["TPD rider",`${money(state.tpdCover)} cover to age 70 — charged on the sum at risk`]);
+    if(state.lccCover)rows.push(["Lifetime Critical Cover",`${money(state.lccCover)} cover — charged on the full insured amount, to age 100`]);
+    if(state.relCover)rows.push(["Relapse Benefit",`${money(state.relCover)} — charged on the full insured amount`]);
+    rows.push(["Fund charge",`<b>${state.amc.toFixed(2)}% p.a.</b> annual management charge (inside the unit price)`]);
     rows.push(["Surrender charge","<b>75%</b> year 1, <b>50%</b> year 2, nil from year 3"]);
     rows.push(["Death benefit","Option <b>Max</b> — the higher of the Insured Amount and the policy value"]);
     rows.push(["Maturity","policy value at age 100; no-lapse guarantee for the first 10 years while premiums are paid"]);
-    rows.push(["Not modelled","rider charges (Total Disability Accelator / Lifetime Critical Cover) and the PowerUp Dollar Vitality credit — not in the supplied documents"]);
+    rows.push(["Reconciled","against AIA's own Policy Illustrations — within <b>0.5%</b> a year at a 4% return and <b>0.6%</b> at 8% over 40 years, with the TPD, Lifetime Critical Cover and Relapse riders in force"]);
+    rows.push(["Not modelled","Total Critical Accelerator charges, the PowerUp Dollar Vitality credit, premium holiday and partial withdrawals"]);
     m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
     $("#origNotes").textContent=p.notes;
     return;
@@ -1235,7 +1308,8 @@ function projectOpts(over){
     topups:state.topups,promo:state.promo,sheetExact:state.exact,ageFrom:state.ageFrom,
     divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
     startMonth:state.startMonth,insured:state.insured,sex:state.sex,smoker:state.smoker,
-    premYears:state.payYears},over||{});
+    premYears:state.payYears,perYear:state.perYear,amc:state.amc/100,
+    tpdCover:state.tpdCover,lccCover:state.lccCover,relCover:state.relCover},over||{});
 }
 function render(){
   const res=project(state.plan,projectOpts());
@@ -1299,6 +1373,11 @@ $("#insured").addEventListener("input",e=>{
   render();
 });
 $("#sex").addEventListener("change",e=>{state.sex=+e.target.value;render();});
+$("#perYear").addEventListener("change",e=>{state.perYear=+e.target.value;render();});
+$("#amc").addEventListener("input",e=>{const v=parseFloat(e.target.value);state.amc=isFinite(v)?Math.max(0,v):0;render();});
+$("#tpdCover").addEventListener("input",e=>{const v=parseFloat(e.target.value);state.tpdCover=isFinite(v)?Math.max(0,v):0;$("#tpdNote").textContent=state.tpdCover?money(state.tpdCover):"excluded";render();});
+$("#lccCover").addEventListener("input",e=>{const v=parseFloat(e.target.value);state.lccCover=isFinite(v)?Math.max(0,v):0;$("#lccNote").textContent=state.lccCover?money(state.lccCover):"excluded";render();});
+$("#relCover").addEventListener("input",e=>{const v=parseFloat(e.target.value);state.relCover=isFinite(v)?Math.max(0,v):0;$("#relNote").textContent=state.relCover?money(state.relCover):"excluded";render();});
 $("#smokerTog").onclick=()=>{state.smoker=!state.smoker;syncInputs();render();};
 
 $("#divFund").addEventListener("change",e=>{
