@@ -244,6 +244,81 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
 .tabs button{background:none;border:0;color:var(--muted);font-family:inherit;font-size:12px;padding:6px 13px;
   border-radius:999px;cursor:pointer;transition:.14s}
 .tabs button.on{background:var(--panel);color:var(--txt);box-shadow:0 1px 5px rgba(0,0,0,.25)}
+
+/* ---------- per-plan config: save state ---------- */
+.tbtn:disabled{opacity:.4;cursor:default}
+.tbtn:disabled:hover{color:var(--muted);border-color:var(--line)}
+.tbtn.primary{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));color:var(--txt);
+  background:color-mix(in srgb,var(--accent) 14%,var(--panel))}
+.pcard .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 25%,transparent)}
+.cfgbar{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);flex-wrap:wrap}
+.cfgbar .tbtn{font-size:11.5px;padding:6px 9px}
+
+/* ---------- export panel ---------- */
+.xwrap{position:relative}
+.xpanel{position:absolute;right:0;top:calc(100% + 9px);width:334px;max-width:calc(100vw - 26px);
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;
+  box-shadow:0 18px 45px rgba(0,0,0,.45);z-index:95;display:none;text-align:left}
+.xpanel.open{display:block}
+.xpanel h4{margin:0 0 4px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.xpanel .xsub{font-size:11px;color:var(--muted);margin:0 0 9px;line-height:1.45}
+.xlist{display:grid;gap:1px;max-height:250px;overflow:auto;margin:4px 0 9px}
+.xrow{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;cursor:pointer;font-size:12.5px}
+.xrow:hover{background:var(--hover)}
+.xrow input{accent-color:var(--accent);width:14px;height:14px;margin:0;flex:0 0 auto;cursor:pointer}
+.xrow .xn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xrow .xt{font-size:10.5px;color:var(--muted);white-space:nowrap}
+.xrow .xd{font-size:9.5px;color:var(--gold);border:1px solid color-mix(in srgb,var(--gold) 40%,var(--line));
+  border-radius:999px;padding:1px 5px;white-space:nowrap}
+.xacts{display:flex;gap:6px;margin-bottom:9px}
+.xacts button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:999px;
+  font-family:inherit;font-size:10.5px;padding:3px 8px;cursor:pointer}
+.xacts button:hover{color:var(--txt);border-color:var(--accent)}
+.xwarn{font-size:11px;line-height:1.5;color:var(--gold);margin:0 0 9px;display:none}
+.xwarn.show{display:block}
+.xbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.xbtns .tbtn{justify-content:center;padding:9px 8px;font-size:12px}
+:root[data-theme="light"] .xpanel{box-shadow:0 18px 45px rgba(20,35,50,.2)}
+:root[data-theme="light"] .xrow .xd{color:#8a6410;border-color:#e3cf9a}
+
+/* ---------- print report ---------- */
+#printRoot{display:none}
+@media print{
+  @page{margin:13mm}
+  html,body{background:#fff !important}
+  body>*{display:none !important}
+  #printRoot{display:block !important;color:#111;background:#fff}
+  .rep{font-family:var(--font);color:#111;font-size:11px;line-height:1.45;page-break-after:always}
+  .rep:last-child{page-break-after:auto}
+  .rep h1{font-size:19px;margin:0 0 2px;letter-spacing:-.3px}
+  .rep .rsub{font-size:11px;color:#555;margin:0 0 12px}
+  .rep h2{font-size:10.5px;letter-spacing:1.1px;text-transform:uppercase;color:#555;
+    border-bottom:1px solid #b9b9b9;padding-bottom:3px;margin:13px 0 6px}
+  .rep table{width:100%;border-collapse:collapse;font-size:9.5px}
+  .rep th,.rep td{border:1px solid #c8c8c8;padding:3px 5px;text-align:right;white-space:nowrap;color:#111}
+  .rep th{background:#f0f0f0;font-size:8.5px;letter-spacing:.3px;text-transform:uppercase;color:#333}
+  .rep th:first-child,.rep td:first-child{text-align:left}
+  .rep .kv{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+  .rep .kvr{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e4e4e4;
+    padding:2.5px 0;font-size:10.5px;break-inside:avoid}
+  .rep .kvr span:first-child{color:#555}
+  .rep .kvr b{font-weight:650;text-align:right}
+  .rep .note{font-size:9.5px;color:#666;line-height:1.5;margin-top:10px}
+  .rep .warnline{font-size:10px;color:#8a1f2a;font-weight:650;margin:6px 0 0}
+  .rep .mrow{display:flex;gap:10px;padding:3px 0;border-top:1px solid #e4e4e4;font-size:10.5px}
+  .rep .mrow:first-of-type{border-top:0}
+  .rep .mk{flex:0 0 118px;color:#555}
+  .rep .mv{flex:1}
+  .rep .bul{display:flex;gap:7px;font-size:10.5px;padding:2.5px 0;border-top:1px solid #eee}
+  .rep .bul:first-child{border-top:0}
+  .rep .bk{color:#0e9f6e;flex:0 0 auto}
+}
+@media(max-width:720px){
+  #savePill{display:none}
+  #exportBtn span{display:none}
+  #exportBtn{padding:7px 9px}
+}
 </style>
 </head>
 <body>
@@ -252,6 +327,22 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
   <div class="brand"><b>ILP Studio</b><span>policy projection</span></div>
   <div class="sp"></div>
   <span class="pill" id="parity">parity: checking…</span>
+  <span class="pill" id="savePill" title="Whether this plan's settings are saved in this browser">defaults</span>
+  <button class="tbtn" id="saveBtn" title="Save this plan's settings in this browser (survives a reload)" disabled>Save</button>
+  <div class="xwrap">
+    <button class="tbtn" id="exportBtn" aria-expanded="false" title="Export one or more plans">⇩ <span>Export</span></button>
+    <div class="xpanel" id="exportPanel" role="dialog" aria-label="Export plans">
+      <h4>Export plans</h4>
+      <p class="xsub">Uses each plan's <b>saved</b> configuration. Tick one, several or all.</p>
+      <div class="xacts"><button type="button" id="xAll">Select all</button><button type="button" id="xNone">Clear</button></div>
+      <div class="xlist" id="xlist"></div>
+      <p class="xwarn" id="xwarn"></p>
+      <div class="xbtns">
+        <button class="tbtn primary" id="xPrint" type="button">Print / PDF</button>
+        <button class="tbtn" id="xCsv" type="button">Download CSV</button>
+      </div>
+    </div>
+  </div>
   <button class="tbtn" id="themeBtn" title="Toggle theme">☀︎ <span>Theme</span></button>
 </div>
 
@@ -340,6 +431,11 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           <div>Sheet-exact model<small>Match the spreadsheet to the cent</small></div>
           <button class="tog" id="exactTog"></button>
         </div>
+        <div class="cfgbar">
+          <button class="tbtn" id="resetOne" type="button" title="Restore this plan's demo values and clear its saved settings">Reset this plan</button>
+          <button class="tbtn" id="resetAll" type="button" title="Restore every plan to demo values and clear all saved settings">Reset all</button>
+        </div>
+        <div class="hint" id="cfgHint">Changes are kept per plan while the page stays open — <b>Save</b> stores this plan in the browser.</div>
       </div>
 
       <div class="card" id="protCard" style="display:none">
@@ -459,6 +555,8 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
     </div>
   </div>
 </div>
+
+<div id="printRoot"></div>
 
 <script>
 /* ============================================================
@@ -784,10 +882,158 @@ const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
   promo:0,topups:{},exact:false,hidden:new Set(),hover:null,
   divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
   insured:300000,sex:0,smoker:false,
-  perYear:1,amc:1.5,tpdCover:300000,lccCover:100000,relCover:100000};
+  perYear:1,amc:1.5,tpdCover:300000,lccCover:100000,relCover:100000,
+  configs:{},saved:{}};
 
 const $=s=>document.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==undefined)e.innerHTML=h;return e;};
+
+/* ============================================================
+   PER-PLAN CONFIGURATION
+   `state.configs[k]` holds each plan's own inputs. The flat values on
+   `state` are the working copy for the ACTIVE plan only — every renderer
+   keeps reading `state`, so nothing downstream needed changing.
+   `state.saved[k]` mirrors localStorage: only an explicit Save writes it,
+   so unsaved work never survives a reload by accident.
+   ============================================================ */
+const LS_KEY="ilp-studio:configs:v1";
+const CFG_KEYS=["premium","payYears","rate","ageFrom","ageTo","promo","topups","exact",
+  "divFund","divYield","divMode","startMonth","insured","sex","smoker","perYear","amc",
+  "tpdCover","lccCover","relCover"];
+const clampN=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const numOr=(v,fb)=>{const n=+v;return isFinite(n)?n:fb;};
+
+function normalizeTopups(t){
+  const o={};
+  if(t&&typeof t==="object")for(const y of Object.keys(t)){
+    const n=Math.round(+y),a=+(t[y]);
+    if(isFinite(n)&&n>=1&&n<=100&&isFinite(a)&&a>0)o[n]=a;
+  }
+  return o;
+}
+/* The factory state of a plan — what clicking its card used to load. */
+function demoConfig(k){
+  const p=PLANS[k];
+  return {premium:p.demo,payYears:p.pay,rate:p.rate,
+    ageFrom:p.demoFrom||30,ageTo:p.demoTo||60,promo:0,topups:{},exact:false,
+    divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
+    insured:p.demoInsured||300000,sex:0,smoker:false,perYear:p.demoPerYear||1,
+    amc:p.demoAmc||1.5,tpdCover:p.demoTpd||0,lccCover:p.demoLcc||0,relCover:p.demoRel||0};
+}
+/* Coerce anything that came from storage (or a stale schema) into a valid config. */
+function cleanCfg(c,base){
+  const b=base||demoConfig("APA30"),d={};
+  d.premium=Math.max(0,numOr(c.premium,b.premium));
+  d.payYears=clampN(Math.round(numOr(c.payYears,b.payYears)),1,40);
+  d.rate=clampN(numOr(c.rate,b.rate),-5,20);
+  d.ageFrom=clampN(Math.round(numOr(c.ageFrom,b.ageFrom)),0,99);
+  d.ageTo=clampN(Math.round(numOr(c.ageTo,b.ageTo)),1,100);
+  if(d.ageTo<=d.ageFrom)d.ageTo=Math.min(100,d.ageFrom+1);
+  d.promo=clampN(numOr(c.promo,b.promo),0,1);
+  d.topups=normalizeTopups(c.topups!==undefined?c.topups:b.topups);
+  d.exact=!!(c.exact!==undefined?c.exact:b.exact);
+  d.divFund=["none","adv","dyn"].indexOf(c.divFund)>=0?c.divFund:b.divFund;
+  d.divYield=clampN(numOr(c.divYield,b.divYield),0,15);
+  d.divMode=c.divMode==="cash"?"cash":"reinvest";
+  d.startMonth=clampN(Math.round(numOr(c.startMonth,b.startMonth)),1,12);
+  d.insured=Math.max(0,numOr(c.insured,b.insured));
+  d.sex=c.sex===1?1:0;
+  d.smoker=!!c.smoker;
+  d.perYear=[1,2,4,12].indexOf(+c.perYear)>=0?+c.perYear:1;
+  d.amc=clampN(numOr(c.amc,b.amc),0,3);
+  d.tpdCover=Math.max(0,numOr(c.tpdCover,b.tpdCover));
+  d.lccCover=Math.max(0,numOr(c.lccCover,b.lccCover));
+  d.relCover=Math.max(0,numOr(c.relCover,b.relCover));
+  return d;
+}
+function snapshotOf(c){const o={};CFG_KEYS.forEach(k=>{o[k]=k==="topups"?normalizeTopups(c[k]):c[k];});return o;}
+function sameCfg(a,b){return JSON.stringify(snapshotOf(a))===JSON.stringify(snapshotOf(b));}
+
+function workingCfg(k){
+  if(k===state.plan)return snapshotOf(state);
+  return state.configs[k]?snapshotOf(state.configs[k]):demoConfig(k);
+}
+function isDirty(k){return !sameCfg(workingCfg(k),state.saved[k]||demoConfig(k));}
+function commitActive(){state.configs[state.plan]=snapshotOf(state);}
+function applyCfg(c){CFG_KEYS.forEach(k=>{state[k]=k==="topups"?Object.assign({},c[k]||{}):c[k];});}
+
+function readSaved(){
+  const out={};
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return out;
+    const o=JSON.parse(raw);
+    for(const k of ORDER){
+      if(o&&o[k]&&typeof o[k]==="object"){
+        const demo=demoConfig(k);
+        out[k]=cleanCfg(Object.assign({},demo,o[k]),demo);
+      }
+    }
+  }catch(e){console.warn("ILP Studio: saved settings could not be read — starting from demo values.",e);}
+  return out;
+}
+function writeSaved(){
+  try{
+    if(Object.keys(state.saved).length)localStorage.setItem(LS_KEY,JSON.stringify(state.saved));
+    else localStorage.removeItem(LS_KEY);
+    return true;
+  }catch(e){
+    console.warn("ILP Studio: this browser refused to store the settings.",e);
+    return false;
+  }
+}
+function loadPlan(k){
+  if(k===state.plan){render();return;}
+  commitActive();
+  state.plan=k;
+  if(!state.configs[k])state.configs[k]=state.saved[k]?Object.assign({},state.saved[k]):demoConfig(k);
+  applyCfg(state.configs[k]);
+  paintParity();
+  syncInputs();render();
+}
+function saveCurrent(){
+  const k=state.plan;
+  state.saved[k]=snapshotOf(state);
+  state.configs[k]=snapshotOf(state);
+  const ok=writeSaved();
+  if(!ok&&$("#cfgHint"))$("#cfgHint").innerHTML='<b style="color:var(--down)">This browser refused to store the settings</b> — they are still kept while the page stays open.';
+  updateCfgUI();
+}
+function resetOne(){
+  const k=state.plan;
+  if(!confirm(`Reset ${PLANS[k].name} (${PLANS[k].term}) to its demo values and clear its saved settings?`))return;
+  state.configs[k]=demoConfig(k);
+  delete state.saved[k];
+  applyCfg(state.configs[k]);
+  writeSaved();paintParity();syncInputs();render();
+}
+function resetAll(){
+  if(!confirm("Reset all seven plans to their demo values and clear every saved setting?"))return;
+  state.configs={};state.saved={};
+  ORDER.forEach(k=>{state.configs[k]=demoConfig(k);});
+  applyCfg(state.configs[state.plan]);
+  writeSaved();paintParity();syncInputs();render();
+}
+function updateCfgUI(){
+  const k=state.plan,dirty=isDirty(k),has=!!state.saved[k];
+  const pill=$("#savePill"),btn=$("#saveBtn"),hint=$("#cfgHint");
+  if(pill){
+    let cls="pill";if(dirty)cls+=" warn";else if(has)cls+=" ok";
+    pill.className=cls;
+    pill.textContent=dirty?"● unsaved":(has?"saved ✓":"defaults");
+    pill.title=dirty?"This plan has changes that are not saved in the browser yet."
+      :(has?"This plan's settings are saved in this browser and survive a reload."
+           :"This plan is showing its demo values; nothing saved yet.");
+  }
+  if(btn)btn.disabled=!dirty;
+  if(hint){
+    hint.innerHTML=dirty
+      ? "Settings are kept per plan while the page stays open — <b>Save</b> writes this plan to the browser."
+      : has ? "Saved in this browser — these settings come back when you reload the page."
+            : "Showing this plan's demo values. Changes are kept while the page is open.";
+  }
+  if($("#xwarn"))updateExportWarn();
+}
 
 /* ---------- plan rail ---------- */
 function renderRail(){
@@ -795,21 +1041,10 @@ function renderRail(){
   ORDER.forEach(k=>{
     const p=PLANS[k];
     const b=el("button","pcard"+(k===state.plan?" on":""),
-      `<div class="nm"><span>${p.name}</span><small>${p.term}</small></div>
+      `<div class="nm"><span>${p.name}</span>${isDirty(k)?'<i class="dot" title="Unsaved changes on this plan"></i>':''}<small>${p.term}</small></div>
        <div class="mt">Illustration ${short(p.demo)}/yr</div>
        <div class="mn">${p.min?"Min "+short(p.min)+" · ":""}${p.pay} yr${p.pay>1?"s":""}</div>`);
-    b.onclick=()=>{
-      state.plan=k;
-      state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
-      state.topups={};state.promo=0;
-      state.ageFrom=p.demoFrom||30; state.ageTo=p.demoTo||60;
-      if(p.protection){
-        state.insured=p.demoInsured;state.tpdCover=p.demoTpd;
-        state.lccCover=p.demoLcc;state.relCover=p.demoRel;
-        state.amc=p.demoAmc;state.perYear=p.demoPerYear;
-      }
-      syncInputs();render();
-    };
+    b.onclick=()=>loadPlan(k);
     r.appendChild(b);
   });
 }
@@ -1094,16 +1329,20 @@ const COLS=[
 ];
 state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges"]);
 
+function usableCols(k){
+  const prot=!!PLANS[k].protection;
+  return COLS.filter(c=>!(c.prot&&!prot)&&!(c.sav&&prot));
+}
+
 function renderTable(res){
   const chips=$("#colchips");chips.innerHTML="";
-  const prot=isProtection();
-  const usable=c=>!(c.prot&&!prot)&&!(c.sav&&prot);
-  COLS.filter(usable).forEach(c=>{
+  const usable=usableCols(state.plan);
+  usable.forEach(c=>{
     const b=el("button","cc"+(!state.hidden.has(c.id)?" on":""),c.label);
     b.onclick=()=>{state.hidden.has(c.id)?state.hidden.delete(c.id):state.hidden.add(c.id);renderTable(res);};
     chips.appendChild(b);
   });
-  const cols=COLS.filter(c=>usable(c)&&!state.hidden.has(c.id));
+  const cols=usable.filter(c=>!state.hidden.has(c.id));
   const lastBe=res.sum.breakEven;
   let h="<thead><tr><th>Yr</th>"+cols.map(c=>`<th>${c.label}</th>`).join("")+"</tr></thead><tbody>";
   res.rows.forEach(r=>{
@@ -1120,35 +1359,32 @@ function renderTable(res){
 }
 
 /* ---------- method ---------- */
-function renderMethod(){
-  const p=PLANS[state.plan],m=$("#method");
-  const rows=[];
-  if(isProtection()){
+function methodRows(key,cfg){
+  const p=PLANS[key],rows=[];
+  if(p.protection){
     rows.push(["Structure","unit-linked — the premium less its charge buys units; every charge is taken by cancelling units"]);
     rows.push(["Premium charge","<b>80% / 55% / 50% / 8% / 0%</b> of each regular premium in policy years 1 / 2 / 3 / 4 / 5+"]);
     rows.push(["Special bonus","<b>2%</b> of regular premiums, paid as extra units from the 10th annual premium"]);
     rows.push(["Policy fee","<b>S$5 a month</b>, deducted by cancelling units"]);
-    rows.push(["Premium frequency",{1:"annual",2:"semi-annual",4:"quarterly",12:"monthly"}[state.perYear]+" — the charge bands are counted in premiums paid, so frequency does not change the total"]);
+    rows.push(["Premium frequency",{1:"annual",2:"semi-annual",4:"quarterly",12:"monthly"}[cfg.perYear]+" — the charge bands are counted in premiums paid, so frequency does not change the total"]);
     rows.push(["Protection charge","annual rate per S$1,000 of <b>sum at risk</b> by attained age (Appendix A), taken monthly; halved in year 1 and reduced 5% / 8% when cover is S$120,000 / S$250,000+"]);
-    if(state.tpdCover)rows.push(["TPD rider",`${money(state.tpdCover)} cover to age 70 — charged on the sum at risk`]);
-    if(state.lccCover)rows.push(["Lifetime Critical Cover",`${money(state.lccCover)} cover — charged on the full insured amount, to age 100`]);
-    if(state.relCover)rows.push(["Relapse Benefit",`${money(state.relCover)} — charged on the full insured amount`]);
-    rows.push(["Fund charge",`<b>${state.amc.toFixed(2)}% p.a.</b> annual management charge (inside the unit price)`]);
+    if(cfg.tpdCover)rows.push(["TPD rider",`${money(cfg.tpdCover)} cover to age 70 — charged on the sum at risk`]);
+    if(cfg.lccCover)rows.push(["Lifetime Critical Cover",`${money(cfg.lccCover)} cover — charged on the full insured amount, to age 100`]);
+    if(cfg.relCover)rows.push(["Relapse Benefit",`${money(cfg.relCover)} — charged on the full insured amount`]);
+    rows.push(["Fund charge",`<b>${cfg.amc.toFixed(2)}% p.a.</b> annual management charge (inside the unit price)`]);
     rows.push(["Surrender charge","<b>75%</b> year 1, <b>50%</b> year 2, nil from year 3"]);
     rows.push(["Death benefit","Option <b>Max</b> — the higher of the Insured Amount and the policy value"]);
     rows.push(["Maturity","policy value at age 100; no-lapse guarantee for the first 10 years while premiums are paid"]);
     rows.push(["Reconciled","against AIA's own Policy Illustrations — within <b>0.5%</b> a year at a 4% return and <b>0.6%</b> at 8% over 40 years, with the TPD, Lifetime Critical Cover and Relapse riders in force"]);
     rows.push(["Not modelled","Total Critical Accelerator charges, the PowerUp Dollar Vitality credit, premium holiday and partial withdrawals"]);
-    m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
-    $("#origNotes").textContent=p.notes;
-    return;
+    return rows;
   }
   rows.push(["Premium term",`${p.pay} year${p.pay>1?"s":""} · minimum ${money(p.min)} per year`]);
-  const band=wbBandFor(p,state.premium);
+  const band=wbBandFor(p,cfg.premium);
   const bandYears=Object.keys(band.rates).sort((a,b)=>a-b);
   const wbsTxt=bandYears.length
     ? bandYears.map(y=>`yr ${y}: ${pct(band.rates[y])}`).join(" · ")+`  —  band ${bandLabel(band)}`
-    : (p.wbBands&&p.wbBands.length?`none at ${money(state.premium)} — bonus starts at ${money(nextBonusFloor(p,state.premium)||0)}`:"none on this plan");
+    : (p.wbBands&&p.wbBands.length?`none at ${money(cfg.premium)} — bonus starts at ${money(nextBonusFloor(p,cfg.premium)||0)}`:"none on this plan");
   rows.push(["Welcome bonus",wbsTxt]);
   if(p.special.length)rows.push(["Special bonus",p.special.filter(s=>s[2]>0).map(s=>`${pct(s[2])} of annual premium, years ${s[1]===999?"21+":s[0]+"–"+s[1]}`).join(" · ")]);
   if(p.invRate)rows.push(["Investment bonus",`${pct(p.invRate)} of premium paid in years ${p.invYears[0]}–${p.invYears[1]}`]);
@@ -1156,12 +1392,16 @@ function renderMethod(){
   rows.push(["Supplementary charge",p.supp?`${pct(p.supp)} p.a. on account value, years 1–${p.suppYears}`:"none (one-off 3% entry charge instead)"]);
   const sur=Object.keys(p.surrender).sort((a,b)=>a-b);
   rows.push(["Surrender charge",sur.length?sur.map(y=>`${pct(p.surrender[y])}`).join(" → ")+" (years 1 onward)":"none at any time"]);
-  const fund=DIV_FUNDS[state.divFund];
-  rows.push(["Dividends",state.divFund==="none"
+  const fund=DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none;
+  rows.push(["Dividends",cfg.divFund==="none"
     ? "no dividend fund selected — gains stay inside as growth"
-    : `${fund.label} · ${pct(state.divYield/100)} p.a. paid quarterly, ${state.divMode==="cash"?"taken as cash":"reinvested"}`]);
-  m.innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
-  $("#origNotes").textContent=p.notes;
+    : `${fund.label} · ${pct(cfg.divYield/100)} p.a. paid quarterly, ${cfg.divMode==="cash"?"taken as cash":"reinvested"}`]);
+  return rows;
+}
+function renderMethod(){
+  const rows=methodRows(state.plan,state);
+  $("#method").innerHTML=rows.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
+  $("#origNotes").textContent=PLANS[state.plan].notes;
 }
 
 /* ---------- welcome bonus tiers ---------- */
@@ -1302,14 +1542,20 @@ function paintParity(){
 /* ============================================================
    RENDER
    ============================================================ */
+/* Engine options from any config object — the live `state`, or a plan's
+   saved config for an export. One path, so exports cannot drift from what
+   the screen shows. */
+function cfgToOpts(c){
+  return {premium:c.premium,rate:c.rate/100,
+    years:Math.max(1,c.ageTo-c.ageFrom),payYears:c.payYears,
+    topups:c.topups,promo:c.promo,sheetExact:c.exact,ageFrom:c.ageFrom,
+    divFund:c.divFund,divYield:c.divYield,divMode:c.divMode,
+    startMonth:c.startMonth,insured:c.insured,sex:c.sex,smoker:c.smoker,
+    premYears:c.payYears,perYear:c.perYear,amc:c.amc/100,
+    tpdCover:c.tpdCover,lccCover:c.lccCover,relCover:c.relCover};
+}
 function projectOpts(over){
-  return Object.assign({premium:state.premium,rate:state.rate/100,
-    years:Math.max(1,state.ageTo-state.ageFrom),payYears:state.payYears,
-    topups:state.topups,promo:state.promo,sheetExact:state.exact,ageFrom:state.ageFrom,
-    divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
-    startMonth:state.startMonth,insured:state.insured,sex:state.sex,smoker:state.smoker,
-    premYears:state.payYears,perYear:state.perYear,amc:state.amc/100,
-    tpdCover:state.tpdCover,lccCover:state.lccCover,relCover:state.relCover},over||{});
+  return Object.assign(cfgToOpts(state),over||{});
 }
 function render(){
   const res=project(state.plan,projectOpts());
@@ -1321,7 +1567,112 @@ function render(){
   renderRail();renderKpis(res);renderChart(res);renderBars(res);
   renderTable(res);renderMethod();renderBullets();renderBonus();renderCompare();renderFoot();
   renderDivHint(res,alt);
+  updateCfgUI();
   fitSidebar();
+}
+
+/* ============================================================
+   EXPORT — print/PDF report and CSV, per selected plan.
+   Built from the plan's SAVED configuration (or its demo values when
+   nothing has been saved yet) — never from another plan's live screen.
+   ============================================================ */
+function exportCfg(k){
+  const demo=demoConfig(k);
+  return state.saved[k]?cleanCfg(state.saved[k],demo):demo;
+}
+function dateStamp(d){const t=d||new Date();
+  return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0");}
+function slug(s){return String(s).replace(/[^A-Za-z0-9.]+/g,"-").replace(/^[.-]+|[.-]+$/g,"");}
+function csvName(k){const p=PLANS[k];return slug(p.name)+"-"+slug(p.term)+"_"+dateStamp()+".csv";}
+
+const CSV_BASE=[["year",r=>r.year],["age",r=>r.age],["premium_sgd",r=>r.premium],
+  ["welcome_bonus_pct",r=>r.wb*100],["topup_sgd",r=>r.topup],
+  ["invested_sgd",r=>r.invested],["bonus_amount_sgd",r=>r.special+r.invBonus+r.perfBonus],
+  ["value_at_0pct_sgd",r=>r.av0],["before_charges_sgd",r=>r.beforeCharges],
+  ["charge_sgd",r=>r.charge],["net_value_sgd",r=>r.net],
+  ["dividend_sgd",r=>r.dividend],["dividend_to_date_sgd",r=>r.divCum],
+  ["surrender_pct",r=>r.surrender*100],["cash_out_sgd",r=>r.cashout]];
+const CSV_PROT=[["premium_charge_sgd",r=>r.premCharge],["protection_charge_sgd",r=>r.coi],
+  ["death_benefit_sgd",r=>r.death]];
+
+/* Raw numbers only — no currency symbols, no thousands separators — so the file
+   opens cleanly in Excel/pandas. Percent columns are in percent points (5 = 5%). */
+function csvTable(k,cfg){
+  const cols=CSV_BASE.concat(PLANS[k].protection?CSV_PROT:[]);
+  const res=project(k,cfgToOpts(cfg));
+  const num=v=>{
+    if(typeof v!=="number"||!isFinite(v))return "";
+    return Number.isInteger(v)?v:(Math.round(v*10000)/10000);
+  };
+  const lines=[cols.map(c=>c[0]).join(",")];
+  res.rows.forEach(r=>lines.push(cols.map(([,f])=>num(f(r))).join(",")));
+  return lines.join("\r\n")+"\r\n";
+}
+
+function reportModel(k,cfg){
+  const p=PLANS[k],res=project(k,cfgToOpts(cfg)),s=res.sum,prot=!!p.protection;
+  const assumptions=[
+    ["Annual premium",money(cfg.premium)],
+    [prot?"Premium term":"Premiums paid for",cfg.payYears+" year"+(cfg.payYears>1?"s":"")],
+    ["Assumed return",pct(cfg.rate/100)+" p.a."],
+    ["Age now → projected to",cfg.ageFrom+" → "+cfg.ageTo+"  ("+Math.max(1,cfg.ageTo-cfg.ageFrom)+" years)"]
+  ];
+  if(prot){
+    assumptions.push(["Insured amount",money(cfg.insured)]);
+    assumptions.push(["Life insured",(cfg.sex===1?"Female":"Male")+(cfg.smoker?", smoker":", non-smoker")]);
+    assumptions.push(["Premium frequency",{1:"Annual",2:"Semi-annual",4:"Quarterly",12:"Monthly"}[cfg.perYear]||"Annual"]);
+    assumptions.push(["Fund management charge",cfg.amc.toFixed(2)+"% p.a."]);
+    assumptions.push(["TPD / Critical / Relapse cover",
+      [cfg.tpdCover,cfg.lccCover,cfg.relCover].map(v=>v?money(v):"excluded").join(" · ")]);
+  }else{
+    assumptions.push(["Extra welcome bonus",cfg.promo?pct(cfg.promo)+" of the year-1 premium":"none"]);
+    const tus=Object.keys(cfg.topups).map(Number).sort((a,b)=>a-b);
+    assumptions.push(["Ad-hoc top-ups",tus.length?tus.map(y=>"yr "+y+": "+money(cfg.topups[y])).join(" · "):"none"]);
+    assumptions.push(["Dividends",cfg.divFund==="none"
+      ? "no dividend fund — gains stay inside as growth"
+      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" p.a. "+(cfg.divMode==="cash"?"taken as cash":"reinvested")+", policy starts month "+cfg.startMonth]);
+  }
+  assumptions.push(["Sheet-exact model",cfg.exact?"on — reproduces the spreadsheet to the cent":"off — the three documented corrections are applied"]);
+  const summary=[
+    ["Value at age "+cfg.ageTo,money(s.value)],
+    ["Premiums paid",money(s.premiums)],
+    ["Profit",money(s.profit)+"  ("+s.multiple.toFixed(2)+"× premiums)"],
+    ["Total charges",money(s.charges)+"  ("+pct(s.chargesPct)+" of premiums)"],
+    ["Break-even",s.breakEven?("year "+s.breakEven+" · age "+(cfg.ageFrom+s.breakEven)):"not within the horizon"]
+  ];
+  if(!prot&&cfg.divFund!=="none")
+    summary.push([cfg.divMode==="cash"?"Dividends taken":"Dividends reinvested",money(s.dividends)]);
+  if(prot){
+    summary.push(["Death cover",money(cfg.insured)+" (pays the higher of this and the policy value)"]);
+    summary.push(["Protection charges to date",money(res.rows.reduce((a,x)=>a+x.coi,0))]);
+  }
+  return {k,p,cfg,res,sum:s,prot,assumptions,summary,
+    cols:usableCols(k),method:methodRows(k,cfg),
+    belowMin:!!(p.min>0&&cfg.premium<p.min)};
+}
+function reportHTML(m){
+  const p=m.p,cfg=m.cfg;
+  const dateStr=new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+  const kv=rows=>`<div class="kv">`+rows.map(([k,v])=>`<div class="kvr"><span>${k}</span><b>${v}</b></div>`).join("")+`</div>`;
+  let h=`<section class="rep">`;
+  h+=`<h1>${p.name} · ${p.term}</h1>`;
+  h+=`<p class="rsub">ILP Studio policy projection — generated ${dateStr} · All figures in Singapore dollars (S$) · Reference only, not advice</p>`;
+  if(m.belowMin)h+=`<p class="warnline">⚠ The premium of ${money(cfg.premium)} is below this plan's minimum of ${money(p.min)} — the source spreadsheet would reject this configuration.</p>`;
+  h+=`<h2>Inputs &amp; assumptions</h2>`+kv(m.assumptions);
+  h+=`<h2>Summary</h2>`+kv(m.summary);
+  h+=`<h2>Year by year</h2><table><thead><tr><th>Yr</th>`+m.cols.map(c=>`<th>${c.label}</th>`).join("")+`</tr></thead><tbody>`;
+  m.res.rows.forEach(r=>{h+=`<tr><td>${r.year}</td>`+m.cols.map(c=>`<td>${c.get(r)}</td>`).join("")+`</tr>`;});
+  h+=`</tbody></table>`;
+  h+=`<h2>How this plan works</h2>`;
+  h+=m.method.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
+  if((p.bullets||[]).length)h+=`<h2>Plan highlights</h2>`+p.bullets.map(b=>`<div class="bul"><span class="bk">✓</span><span>${b}</span></div>`).join("");
+  h+=`<p class="note">Projections use a flat assumed return and each plan's charges as written. `
+    +(cfg.exact?"Sheet-exact mode is ON — every yearly value reproduces the source spreadsheet to the cent."
+                :"Sheet-exact mode is OFF — the three documented corrections apply (PWV growth, APA/AWV year-1 bonuses, Invest Easy entry fee).")
+    +` ${m.prot?"Percentages are the client framing: 80% of the year-1 premium goes to charges and 20% buys units; 100% is invested from year 5 and 102% from year 10. ":""}`
+    +`Dividends are an assumption, not a promise — distributions may be paid out of capital and neither capital nor dividends are guaranteed. This is a reference illustration, not advice, and not a forecast.</p>`;
+  h+=`</section>`;
+  return h;
 }
 
 /* ---------- wiring ---------- */
@@ -1401,11 +1752,106 @@ $("#themeBtn").onclick=()=>{
   h.dataset.theme=h.dataset.theme==="light"?"dark":"light";
 };
 
+/* ---------- save / reset / export wiring ---------- */
+$("#saveBtn").onclick=()=>saveCurrent();
+$("#resetOne").onclick=()=>resetOne();
+$("#resetAll").onclick=()=>resetAll();
+
+function selectedKeys(){
+  return ORDER.filter(k=>{const c=document.getElementById("ck-"+k);return !!(c&&c.checked);});
+}
+function renderExportList(){
+  const host=$("#xlist"),prev=new Set(selectedKeys());
+  host.innerHTML="";
+  ORDER.forEach(k=>{
+    const p=PLANS[k];
+    const lab=el("label","xrow");
+    const cb=document.createElement("input");
+    cb.type="checkbox";cb.id="ck-"+k;cb.checked=prev.has(k);
+    cb.addEventListener("change",updateExportWarn);
+    lab.appendChild(cb);
+    lab.appendChild(el("span","xn",p.name));
+    lab.appendChild(el("span","xt",p.term));
+    if(isDirty(k))lab.appendChild(el("span","xd","unsaved"));
+    host.appendChild(lab);
+  });
+  if(!host.querySelector("input:checked")){
+    const cur=document.getElementById("ck-"+state.plan);
+    if(cur)cur.checked=true;
+  }
+  updateExportWarn();
+}
+function updateExportWarn(){
+  const warn=$("#xwarn");if(!warn)return;
+  const keys=selectedKeys(),msgs=[];
+  if(!keys.length)msgs.push("Tick at least one plan to export.");
+  const uns=keys.filter(k=>isDirty(k));
+  if(uns.length)msgs.push("Unsaved changes on "+uns.map(k=>PLANS[k].name+" ("+PLANS[k].term+")").join(", ")
+    +" are not included — press Save first if you want them in the export.");
+  const below=keys.filter(k=>PLANS[k].min>0&&exportCfg(k).premium<PLANS[k].min);
+  if(below.length)msgs.push("Premium is below the plan minimum on "+below.map(k=>PLANS[k].name+" ("+PLANS[k].term+")").join(", ")
+    +" — the report will be flagged and the spreadsheet would reject it.");
+  warn.innerHTML=msgs.join("<br>");
+  warn.className="xwarn"+(msgs.length?" show":"");
+  $("#xPrint").disabled=!keys.length;
+  $("#xCsv").disabled=!keys.length;
+}
+function openExport(){
+  renderExportList();
+  $("#exportPanel").classList.add("open");
+  $("#exportBtn").setAttribute("aria-expanded","true");
+}
+function closeExport(){
+  const p=$("#exportPanel");
+  if(p)p.classList.remove("open");
+  const b=$("#exportBtn");
+  if(b)b.setAttribute("aria-expanded","false");
+}
+$("#exportBtn").addEventListener("click",e=>{
+  e.stopPropagation();
+  $("#exportPanel").classList.contains("open")?closeExport():openExport();
+});
+$("#exportPanel").addEventListener("click",e=>e.stopPropagation());
+document.addEventListener("click",e=>{
+  const p=$("#exportPanel");
+  if(p&&p.classList.contains("open")&&!p.contains(e.target))closeExport();
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeExport();});
+$("#xAll").onclick=()=>{ORDER.forEach(k=>{const c=document.getElementById("ck-"+k);if(c)c.checked=true;});updateExportWarn();};
+$("#xNone").onclick=()=>{ORDER.forEach(k=>{const c=document.getElementById("ck-"+k);if(c)c.checked=false;});updateExportWarn();};
+
+function downloadFile(name,text){
+  const blob=new Blob([text],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;a.style.display="none";
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1200);
+}
+$("#xCsv").onclick=()=>{
+  const keys=selectedKeys();
+  if(!keys.length)return;
+  keys.forEach((k,i)=>setTimeout(()=>downloadFile(csvName(k),csvTable(k,exportCfg(k))),i*340));
+  closeExport();
+};
+$("#xPrint").onclick=()=>{
+  const keys=selectedKeys();
+  if(!keys.length)return;
+  $("#printRoot").innerHTML=keys.map(k=>reportHTML(reportModel(k,exportCfg(k)))).join("");
+  const old=document.title;
+  document.title="ILP Studio report "+dateStamp();
+  const restore=()=>{document.title=old;window.removeEventListener("afterprint",restore);};
+  window.addEventListener("afterprint",restore);
+  closeExport();
+  setTimeout(()=>window.print(),80);
+};
+
 /* ---------- boot ---------- */
 (function boot(){
+  state.saved=readSaved();
+  ORDER.forEach(k=>{state.configs[k]=state.saved[k]?Object.assign({},state.saved[k]):demoConfig(k);});
+  applyCfg(state.configs[state.plan]);
   paintParity();
-  const p=PLANS[state.plan];
-  state.premium=p.demo;state.payYears=p.pay;state.rate=p.rate;
   syncInputs();render();
 })();
 </script>
