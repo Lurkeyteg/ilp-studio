@@ -318,6 +318,8 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
   #savePill{display:none}
   #exportBtn span{display:none}
   #exportBtn{padding:7px 9px}
+  #defaultBtn span{display:none}
+  #defaultBtn{padding:7px 9px}
 }
 </style>
 </head>
@@ -343,6 +345,7 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
       </div>
     </div>
   </div>
+  <button class="tbtn" id="defaultBtn" title="Put every plan back to its default settings and clear what is saved">↺ <span>Default</span></button>
   <button class="tbtn" id="themeBtn" title="Toggle theme">☀︎ <span>Theme</span></button>
 </div>
 
@@ -433,7 +436,6 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
         </div>
         <div class="cfgbar">
           <button class="tbtn" id="resetOne" type="button" title="Restore this plan's demo values and clear its saved settings">Reset this plan</button>
-          <button class="tbtn" id="resetAll" type="button" title="Restore every plan to demo values and clear all saved settings">Reset all</button>
         </div>
         <div class="hint" id="cfgHint">Changes are kept per plan while the page stays open — <b>Save</b> stores this plan in the browser.</div>
       </div>
@@ -1755,7 +1757,7 @@ $("#themeBtn").onclick=()=>{
 /* ---------- save / reset / export wiring ---------- */
 $("#saveBtn").onclick=()=>saveCurrent();
 $("#resetOne").onclick=()=>resetOne();
-$("#resetAll").onclick=()=>resetAll();
+$("#defaultBtn").onclick=()=>resetAll();
 
 function selectedKeys(){
   return ORDER.filter(k=>{const c=document.getElementById("ck-"+k);return !!(c&&c.checked);});
