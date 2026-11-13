@@ -277,6 +277,11 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
 .xacts button:hover{color:var(--txt);border-color:var(--accent)}
 .xwarn{font-size:11px;line-height:1.5;color:var(--gold);margin:0 0 9px;display:none}
 .xwarn.show{display:block}
+.xseg{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px;margin:0 0 7px}
+.xseg button{flex:1;background:none;border:0;color:var(--muted);font-family:inherit;font-size:11px;
+  padding:5px 6px;border-radius:999px;cursor:pointer;transition:.14s}
+.xseg button.on{background:var(--panel);color:var(--txt);box-shadow:0 1px 5px rgba(0,0,0,.25)}
+.xhint{font-size:10.5px;color:var(--muted);line-height:1.45;margin:0 0 10px}
 .xbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .xbtns .tbtn{justify-content:center;padding:9px 8px;font-size:12px}
 :root[data-theme="light"] .xpanel{box-shadow:0 18px 45px rgba(20,35,50,.2)}
@@ -314,6 +319,40 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
   .rep .bul:first-child{border-top:0}
   .rep .bk{color:#0e9f6e;flex:0 0 auto}
 }
+
+/* page-view export: the app page itself, in the theme it is viewed in */
+.rep-page{display:none}
+@media print{
+  .rep-page{display:block;page-break-after:always;font-family:var(--font);color:var(--txt);
+    background:var(--bg);-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:1mm 0 4mm}
+  .rep-page:last-child{page-break-after:auto}
+  .rep-page .pv-head{display:flex;align-items:baseline;gap:9px;border-bottom:1px solid var(--line);
+    padding:0 0 7px;margin:0 0 7px;flex-wrap:wrap}
+  .rep-page .pv-head b{font-size:15px;font-weight:750;letter-spacing:-.2px}
+  .rep-page .pv-head .pv-sub{font-size:11px;color:var(--muted)}
+  .rep-page .pv-head .pv-plan{margin-left:auto;font-size:13px;font-weight:650}
+  .rep-page .pv-meta{font-size:10.5px;color:var(--muted);margin:0 0 8px}
+  .rep-page .card{margin-top:9px;padding:12px;border-radius:12px}
+  .rep-page .ctitle{font-size:9px;margin-bottom:8px}
+  .rep-page .kpis{gap:7px}
+  .rep-page .kpi{padding:9px 10px}
+  .rep-page .kpi .k{font-size:8.5px}
+  .rep-page .kpi .v{font-size:16px}
+  .rep-page .kpi.hero-k .v{font-size:19px}
+  .rep-page .kpi .s{font-size:9.5px}
+  .rep-page .chartbox svg{height:220px !important}
+  .rep-page .scroll{max-height:none;overflow:visible;border:0;border-radius:0}
+  .rep-page .colchips{display:none}
+  .rep-page th,.rep-page td{position:static;font-size:9px;padding:3.5px 6px}
+  .rep-page th:first-child,.rep-page td:first-child{position:static}
+  .rep-page .bar{grid-template-columns:96px 1fr 76px;font-size:10px}
+  .rep-page .bul{font-size:10.5px;padding:3px 0}
+  .rep-page .mrow{font-size:10.5px;padding:2.5px 0}
+  .rep-page .mrow .mk{flex-basis:112px}
+  .rep-page .wbtbl{font-size:9.5px}
+  .rep-page .hint,.rep-page details{display:none}
+  .rep-page .pill{font-size:9px}
+}
 @media(max-width:720px){
   #savePill{display:none}
   #exportBtn span{display:none}
@@ -339,6 +378,11 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
       <div class="xacts"><button type="button" id="xAll">Select all</button><button type="button" id="xNone">Clear</button></div>
       <div class="xlist" id="xlist"></div>
       <p class="xwarn" id="xwarn"></p>
+      <div class="xseg" id="xseg">
+        <button type="button" data-style="page" class="on">Page view</button>
+        <button type="button" data-style="report">Table report</button>
+      </div>
+      <p class="xhint">Page view prints the page itself — KPIs, chart and cards, in the theme you are viewing. Table report is the light, print-friendly pack with inputs, summary and every column. If your print dialog strips colours, tick “Background graphics”.</p>
       <div class="xbtns">
         <button class="tbtn primary" id="xPrint" type="button">Print / PDF</button>
         <button class="tbtn" id="xCsv" type="button">Download CSV</button>
@@ -1830,6 +1874,76 @@ function downloadFile(name,text){
   document.body.appendChild(a);a.click();
   setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1200);
 }
+/* PDF style: the page itself, or the light table report */
+let pdfStyle="page";
+const segBtns=[...document.querySelectorAll("#xseg button")];
+segBtns.forEach(b=>{
+  b.onclick=()=>{
+    pdfStyle=b.dataset.style;
+    segBtns.forEach(x=>x.classList.toggle("on",x===b));
+  };
+});
+
+let pvUid=0;
+function cloneForPrint(n){
+  if(!n)return null;
+  const c=n.cloneNode(true);
+  /* SVG defs are referenced by url(#id), so those ids must survive the clone —
+     give them unique names per section, then strip every other id so the
+     printout can never collide with the live page's own ids. */
+  const keep=new Set();
+  c.querySelectorAll("defs [id]").forEach(def=>{
+    const old=def.id,nw=old+"__pv"+(++pvUid);
+    keep.add(nw);
+    def.id=nw;
+    c.querySelectorAll("*").forEach(el=>{
+      for(const a of [...el.attributes]){
+        if(a.value.indexOf("url(#"+old+")")>=0)
+          el.setAttribute(a.name,a.value.split("url(#"+old+")").join("url(#"+nw+")"));
+      }
+    });
+  });
+  [c,...c.querySelectorAll("[id]")].forEach(x=>{
+    if(x&&x.removeAttribute&&!keep.has(x.id))x.removeAttribute("id");
+  });
+  return c;
+}
+function cardContaining(sel){
+  const n=document.querySelector(sel);
+  return n?n.closest(".card"):null;
+}
+/* Render one plan exactly as the app shows it, clone the result, then hand the
+   markup back. The live state is restored before this returns, so exporting
+   never disturbs the config the user is editing. */
+function pageViewBlock(k,cfg){
+  const prevPlan=state.plan,prev=snapshotOf(state);
+  try{
+    if(k!==state.plan){commitActive();state.plan=k;}
+    applyCfg(cfg);syncInputs();render();
+    const parts=[];
+    const add=node=>{const c=cloneForPrint(node);if(c)parts.push(c);};
+    add(document.querySelector("#kpis"));
+    add(cardContaining("#chartbox"));
+    add(cardContaining("#bars"));
+    add(cardContaining("#tbl"));
+    add(document.querySelector("#bonusCard"));
+    add(cardContaining("#planBullets"));
+    add(cardContaining("#method"));
+    const p=PLANS[k];
+    const dateStr=new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+    const wrap=document.createElement("section");
+    wrap.className="rep-page";
+    wrap.innerHTML=`<div class="pv-head"><b>ILP Studio</b><span class="pv-sub">policy projection</span><span class="pv-plan">${p.name} · ${p.term}</span></div>
+      <div class="pv-meta">${pct(cfg.rate/100)} p.a. · ${Math.max(1,cfg.ageTo-cfg.ageFrom)} years · age ${cfg.ageFrom}→${cfg.ageTo} · S$ figures · generated ${dateStr} · reference only, not advice</div>`;
+    parts.forEach(c=>wrap.appendChild(c));
+    return wrap.outerHTML;
+  }finally{
+    state.plan=prevPlan;
+    applyCfg(prev);
+    syncInputs();render();
+  }
+}
+
 $("#xCsv").onclick=()=>{
   const keys=selectedKeys();
   if(!keys.length)return;
@@ -1839,9 +1953,12 @@ $("#xCsv").onclick=()=>{
 $("#xPrint").onclick=()=>{
   const keys=selectedKeys();
   if(!keys.length)return;
-  $("#printRoot").innerHTML=keys.map(k=>reportHTML(reportModel(k,exportCfg(k)))).join("");
+  const host=$("#printRoot");
+  host.innerHTML=pdfStyle==="page"
+    ? keys.map(k=>pageViewBlock(k,exportCfg(k))).join("")
+    : keys.map(k=>reportHTML(reportModel(k,exportCfg(k)))).join("");
   const old=document.title;
-  document.title="ILP Studio report "+dateStamp();
+  document.title=(pdfStyle==="page"?"ILP Studio pages ":"ILP Studio report ")+dateStamp();
   const restore=()=>{document.title=old;window.removeEventListener("afterprint",restore);};
   window.addEventListener("afterprint",restore);
   closeExport();
