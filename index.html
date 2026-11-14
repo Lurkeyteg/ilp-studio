@@ -1292,7 +1292,13 @@ function renderChart(res){
   const prot=isProtection();
   const gross=prot?"death":((key==="APA30"||key==="AWV10")?"beforeCharges":null);
   const acct=(!prot&&(key==="PWV5"||key==="PWV2"||key==="SRS1"))?"net":null;
-  const maxV=Math.max(...rows.map(r=>Math.max(r.total,r.cumPremiums,r.death||0)),1);
+  /* Scale the y-axis to EVERY series the chart draws. "Before charges" sits well
+     above the after-charge value — sharply so once dividends are taken as cash —
+     and an unscaled series escapes the plot area. */
+  const plotted=["total","cumPremiums"];
+  if(gross)plotted.push(gross);
+  if(acct)plotted.push(acct);
+  const maxV=Math.max(...rows.map(r=>Math.max(...plotted.map(pk=>+r[pk]||0))),1);
   const steps=4;
   const niceStep=x=>{const mag=Math.pow(10,Math.floor(Math.log10(x)));const n=x/mag;
     const cands=[1,1.25,1.5,2,2.5,3,4,5,6,8,10];
