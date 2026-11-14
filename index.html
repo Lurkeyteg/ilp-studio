@@ -117,7 +117,9 @@ body{background:var(--bg);background-image:var(--glow);background-repeat:no-repe
 .inp input{flex:1;min-width:0;background:none;border:0;color:var(--txt);font-family:inherit;font-size:13.5px;
   padding:9px 10px;font-variant-numeric:tabular-nums;outline:none;width:100%}
 .inp .sfx{padding:0 10px 0 0;color:var(--muted);font-size:11.5px;white-space:nowrap}
+.inp input:disabled{opacity:.55;cursor:not-allowed}
 input[type=range]{-webkit-appearance:none;width:100%;height:22px;background:transparent;margin:2px 0 0}
+input[type=range]:disabled{opacity:.4;cursor:not-allowed}
 input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:3px;background:var(--line)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
   background:var(--accent);margin-top:-5px;border:2px solid var(--panel);cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.5)}
@@ -425,7 +427,7 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
           <div class="inp"><input id="payYears" type="number" min="1" max="40" step="1"><span class="sfx">years</span></div>
         </div>
 
-        <div class="field">
+        <div class="field" id="rateField">
           <label>Assumed return <b id="rateNote"></b></label>
           <div class="inp"><input id="rate" type="number" min="-5" max="20" step="0.25"><span class="sfx">% p.a.</span></div>
           <input id="rateRange" type="range" min="0" max="15" step="0.25">
@@ -751,7 +753,11 @@ function project(key,o){
      else is ignored by the engine as well as hidden in the picker. */
   const funds=allowedFunds(key);
   const fundOk=!o.divFund||o.divFund==="none"||funds.indexOf(o.divFund)>=0;
-  const divY=(fundOk?Math.max(0,(o.divYield===undefined?0:o.divYield)):0)/100;   // annual yield, decimal
+  const fundOn=!!(fundOk&&o.divFund&&o.divFund!=="none");
+  const divY=(fundOn?Math.max(0,(o.divYield===undefined?0:o.divYield)):0)/100;   // distribution rate = fund rate
+  /* Choosing a dividend fund is EXCLUSIVE: the plan's assumed return no longer
+     applies. Growth comes only from the fund's distributions. */
+  const growth=fundOn?0:rate;
   const divMode=o.divMode||"reinvest";                                 // reinvest | cash
   const startMonth=Math.max(1,Math.min(12,o.startMonth||1));
   /* Withdrawals. A regular withdrawal is a FIXED yearly amount with a S$1,000
@@ -764,7 +770,7 @@ function project(key,o){
   const regAmt=regAmtRaw>0?Math.max(1000,regAmtRaw):0;
   const regFrom=Math.max(1,Math.round(o.wdRegFrom||1));
   const regTo=Math.max(regFrom,Math.round(o.wdRegTo||years));
-  const rows=[]; let invested=0,av=0,net=0,divCum=0,cashCum=0,reinvCum=0,wdCum=0,wdShortCum=0;
+  const rows=[]; let invested=0,av=0,net=0,divAcct=0,divCum=0,cashCum=0,reinvCum=0,wdCum=0,wdShortCum=0;
   for(let t=1;t<=years;t++){
     const b=t<=pay?o.premium:0;
     const band=wbBandFor(p,o.premium);
@@ -780,26 +786,25 @@ function project(key,o){
     if(key==="APA30"){
       const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
       const u=t<=p.suppYears?p.supp:0;
-      dividend=(net+base+sp)*divY*divFraction(t,startMonth);
-      const cashDiv=divMode==="cash"?dividend:0;
-      av=(av+base+sp)*(1+rate);
+      dividend=fundOn?(net+base+sp)*divY*divFraction(t,startMonth):0;
+      av=(av+base+sp)*(1+growth);
       charge=av*u;
-      net=(net+base+sp)*(1+rate-u)-cashDiv;
+      av=Math.max(0,av-dividend);
+      net=(net+base+sp)*(1+growth-u)-dividend;
     } else if(key==="AWV10"){
       const base=(t===1)?(o.premium*(1+wb)+top):(exact?(b+top):inflow);
       const u=t<=p.suppYears?p.supp:0;
       perfBonus=t>=9?p.perf*net:0;
-      dividend=(net+base+inv+perfBonus)*divY*divFraction(t,startMonth);
-      const cashDiv=divMode==="cash"?dividend:0;
-      av=(av+base+inv)*(1+rate);
+      dividend=fundOn?(net+base+inv+perfBonus)*divY*divFraction(t,startMonth):0;
+      av=(av+base+inv)*(1+growth);
       charge=av*u;
-      net=(net+base+inv+perfBonus)*(1+rate-u)-cashDiv;
+      av=Math.max(0,av-dividend);
+      net=(net+base+inv+perfBonus)*(1+growth-u)-dividend;
     } else if(key==="EASY"){
       const fee=t===1?o.premium*p.entryFee:0;
-      dividend=(av+b+top)*divY*divFraction(t,startMonth);
-      const cashDiv=divMode==="cash"?dividend:0;
-      av=(t===1)?((o.premium-fee)*(1+rate)-(exact?fee:0)):((av+b+top)*(1+rate));
-      av-=cashDiv;
+      dividend=fundOn?(av+b+top)*divY*divFraction(t,startMonth):0;
+      av=(t===1)?((o.premium-fee)*(1+growth)-(exact?fee:0)):((av+b+top)*(1+growth));
+      av=Math.max(0,av-dividend);
       charge=fee; net=av;
     } else {
       // PWV family. The spreadsheet never grew this account at all — it only added
@@ -808,32 +813,44 @@ function project(key,o){
       const pre0=net+inflow;
       const u=t<=p.suppYears?p.supp:0;
       perfBonus=t>=9?p.perf*net:0;
-      dividend=(pre0+inv+perfBonus)*divY*divFraction(t,startMonth);
-      const cashDiv=divMode==="cash"?dividend:0;
-      if(exact){
+      dividend=fundOn?(pre0+inv+perfBonus)*divY*divFraction(t,startMonth):0;
+      if(exact&&!fundOn){
         charge=pre0*u;
-        net=pre0-charge+inv+perfBonus-cashDiv;
+        net=pre0-charge+inv+perfBonus;
       } else {
-        const gross=pre0*(1+rate);
+        const gross=pre0*(1+growth);
         charge=gross*u;
-        net=gross-charge+inv+perfBonus-cashDiv;
+        net=gross-charge+inv+perfBonus-dividend;
       }
       av=net;
     }
+    /* Reinvested distributions sit in their own DIVIDEND ACCOUNT: no charges at
+       all, and they compound at the fund's own rate. Cash distributions simply
+       leave the policy, so no second account exists. */
+    if(fundOn&&dividend>0){
+      if(divMode==="cash"){ cashCum+=dividend; }
+      else { divAcct=divAcct*(1+divY)+dividend; reinvCum+=dividend; }
+    }
+    divCum+=dividend;
+    /* Withdrawals come out of the main account first, then the dividend account. */
     const wdReq=(+(wdAdhoc[t]||0))+((regOn&&regAmt>0&&t>=regFrom&&t<=regTo)?regAmt:0);
-    const wd=Math.min(wdReq,Math.max(0,net));
-    if(wd>0){ net=Math.max(0,net-wd); av=Math.max(0,av-wd); }
+    const wd=Math.min(wdReq,Math.max(0,net)+Math.max(0,divAcct));
+    let take=wd;
+    const fromMain=Math.min(take,Math.max(0,net));
+    net-=fromMain; take-=fromMain;
+    if(take>0)divAcct=Math.max(0,divAcct-take);
+    av=Math.max(0,av-fromMain);
     const wdShort=Math.max(0,wdReq-wd);
     wdCum+=wd; wdShortCum+=wdShort;
-    divCum+=dividend;
-    if(divMode==="cash") cashCum+=dividend; else reinvCum+=dividend;
     const s=p.surrender[t]||0;
+    const total=Math.max(0,net)+Math.max(0,divAcct);
     rows.push({year:t,age:(o.ageFrom||30)+t,premium:b,wb:wb,topup:top,special:sp,
-      invBonus:inv,perfBonus:perfBonus,invested:invested,av0:av0,beforeCharges:av,
-      net:net,charge:charge,dividend:dividend,divCum:divCum,cashCum:cashCum,
+      invBonus:inv,perfBonus:perfBonus,invested:invested,av0:av0,beforeCharges:av+divAcct,
+      main:net,divAcct:divAcct,net:total,charge:charge,dividend:dividend,divCum:divCum,
+      cashCum:cashCum,
       divPaid:divMode==="cash"?dividend:0,divReinvested:divMode==="cash"?0:dividend,
       withdrawal:wd,wdShort:wdShort,withdrawnCum:wdCum,
-      total:net,surrender:s,cashout:net*(1-s)});
+      total:total,surrender:s,cashout:total*(1-s)});
   }
   const last=rows[rows.length-1];
   const premiums=rows.reduce((a,r)=>a+r.premium,0);
@@ -841,7 +858,8 @@ function project(key,o){
   rows.forEach(r=>{r.cumPremiums=rows.slice(0,r.year).reduce((a,x)=>a+x.premium,0);});
   const breakEven=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
   return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
-    value:last.total,net:last.net,dividends:divCum,cash:cashCum,reinvested:reinvCum,
+    value:last.total,net:last.total,main:last.main,divAcct:last.divAcct,
+    dividends:divCum,cash:cashCum,reinvested:reinvCum,
     withdrawn:wdCum,wdShort:wdShortCum,
     profit:last.total+last.cashCum+wdCum-premiums,multiple:premiums?last.total/premiums:0,
     breakEven:breakEven?breakEven.year:null,last}};
@@ -1207,12 +1225,16 @@ function syncInputs(){
   $("#payYears").value=state.payYears;
   $("#rate").value=state.rate;
   $("#rateRange").value=Math.max(0,Math.min(15,state.rate));
+  const fundOn=state.divFund!=="none";
+  $("#rate").disabled=fundOn;
+  $("#rateRange").disabled=fundOn;
+  $("#rateField").style.opacity=fundOn?".55":"";
   $("#ageFrom").value=state.ageFrom;
   $("#ageTo").value=state.ageTo;
   $("#promo").value=(state.promo*100).toFixed(2).replace(/\.?0+$/,"");
   $("#premNote").textContent="min "+short(p.min);
   $("#payNote").textContent=p.pay+" yr standard";
-  $("#rateNote").textContent="";
+  $("#rateNote").textContent=fundOn?"not used — fund replaces it":"";
   $("#promoNote").textContent="";
   rebuildFundSelect();
   const fund=DIV_FUNDS[state.divFund];
@@ -1290,22 +1312,26 @@ function divPayments(){return 4;}
 function renderDivHint(lastRes,altRes){
   const el2=$("#divHint"),fund=DIV_FUNDS[state.divFund];
   if(state.divFund==="none"){
-    el2.innerHTML=`No distribution modelled — the fund's return stays inside the policy as growth.`;
+    el2.innerHTML=`No dividend fund — the plan grows at the assumed return and there is no dividend account.`;
     return;
   }
   const y=state.divYield/100,q=quartersInYear1();
   const perYear=state.premium*y;
   let txt=`≈ <b>${money(perYear/4)}</b> a quarter · <b>${money(perYear)}</b> a year on a ${money(state.premium)} premium`
-    +` (${q} payment${q===1?"":"s"} in year 1, then 4 a year — Ex-Dates Mar / Jun / Sep / Dec).`;
+    +` (${q} payment${q===1?"":"s"} in year 1, then 4 a year — Ex-Dates Mar / Jun / Sep / Dec).`
+    +`<br><b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's ${pct(y)} distribution.`;
+  if(state.divMode==="reinvest")
+    txt+=` Reinvested, each distribution moves into a separate <b>dividend account</b> with no charges, which earns the fund's ${pct(y)} a year.`;
+  else
+    txt+=` Taken as cash, the distributions leave the policy — no dividend account is created.`;
   if(lastRes&&altRes){
     const diff=altRes.sum.value-lastRes.sum.value;   // alt.value - current.value
     if(state.divMode==="cash"&&diff>1)
-      txt+=`<br>Leaving it invested instead would be worth <b>${money(diff)}</b> more by age ${state.ageTo}.`;
+      txt+=`<br>Leaving them to reinvest instead would be worth <b>${money(diff)}</b> more by age ${state.ageTo}.`;
     else if(state.divMode==="reinvest"&&diff<-1)
       txt+=`<br>Taking them as cash instead would leave <b>${money(-diff)}</b> less in the policy by age ${state.ageTo} — with <b>${money(altRes.sum.cash)}</b> in hand instead.`;
   }
-  if(state.divYield>state.rate)
-    txt+=`<br><b style="color:var(--gold)">Yield above the assumed return</b> — the excess is paid out of capital, so taking cash erodes the policy.`;
+  txt+=`<br>Distributions are declared at AIA's discretion and may be paid out of capital; neither capital nor dividends are guaranteed.`;
   el2.innerHTML=txt;
 }
 
@@ -1373,6 +1399,10 @@ function renderKpis(res){
       s:state.divMode==="cash"?`${money(s.dividends/4)} a quarter at ${pct(state.divYield/100)}`
                               :`${money(s.dividends/4)} a quarter, left in to compound`});
   }
+  if(s.divAcct>0){
+    cards.push({k:"Dividend account",v:money(s.divAcct),
+      s:`no charges · earns ${pct(state.divYield/100)} p.a.`});
+  }
   if(s.withdrawn>0||s.wdShort>0){
     cards.push({k:"Withdrawn",v:money(s.withdrawn),cls:"",
       s:s.wdShort>0?`${money(s.wdShort)} requested but unavailable`
@@ -1393,7 +1423,8 @@ function renderChart(res){
   const mainKey="total";
   const prot=isProtection();
   const gross=prot?"death":((key==="APA30"||key==="AWV10")?"beforeCharges":null);
-  const acct=(!prot&&(key==="PWV5"||key==="PWV2"||key==="SRS1"))?"net":null;
+  const fundOn=state.divFund!=="none"&&allowedFunds(key).indexOf(state.divFund)>=0;
+  const acct=(!prot&&(fundOn||key==="PWV5"||key==="PWV2"||key==="SRS1"))?"main":null;
   /* Scale the y-axis to EVERY series the chart draws. "Before charges" sits well
      above the after-charge value — sharply so once dividends are taken as cash —
      and an unscaled series escapes the plot area. */
@@ -1443,7 +1474,7 @@ function renderChart(res){
   // legend follows the series actually drawn
   const lg=[`<span><i style="background:var(--accent)"></i>${prot?"Policy value":"Value"}</span>`];
   if(gross)lg.push(`<span><i style="background:var(--gold)"></i>${prot?"Death benefit":"Before charges"}</span>`);
-  if(acct)lg.push(`<span><i style="background:var(--twin1)"></i>Account only</span>`);
+  if(acct)lg.push(`<span><i style="background:var(--twin1)"></i>Main account</span>`);
   lg.push(`<span><i style="background:var(--muted)"></i>Money in (premiums)</span>`);
   document.querySelector(".legend").innerHTML=lg.join("");
 
@@ -1457,6 +1488,8 @@ function renderChart(res){
     tip.innerHTML=`<b>Year ${r.year} · age ${r.age}</b>
       <div class="r"><span>Value</span><span>${money(r.total)}</span></div>
       ${r.withdrawal>0?`<div class="r"><span>Withdrawal</span><span>−${money(r.withdrawal)}</span></div>`:""}
+      ${r.divAcct>0?`<div class="r"><span>Main account</span><span>${money(r.main)}</span></div>
+      <div class="r"><span>Dividend acct</span><span>${money(r.divAcct)}</span></div>`:""}
       ${r.dividend>0?`<div class="r"><span>${state.divMode==="cash"?"Paid out":"Reinvested"}</span><span>${money(r.dividend)}</span></div>
       <div class="r"><span>Div. to date</span><span>${money(r.divCum)}</span></div>`:""}
       <div class="r"><span>Money in</span><span>${money(r.cumPremiums)}</span></div>
@@ -1480,6 +1513,7 @@ function renderBars(res){
   if(s.dividends>0)items.push({t:state.divMode==="cash"?"Dividends paid":"Dividends reinvested",
     v:s.dividends,c:"var(--twin1)"});
   if(s.withdrawn>0)items.push({t:"Withdrawn",v:s.withdrawn,c:"var(--gold)"});
+  if(s.divAcct>0)items.push({t:"Dividend account",v:s.divAcct,c:"var(--twin1)"});
   if(res.rows.some(r=>r.special>0))items.push({t:"Special bonuses",v:res.rows.reduce((a,r)=>a+r.special,0),c:"var(--gold)"});
   if(res.rows.some(r=>r.invBonus>0))items.push({t:"Investment bonus",v:res.rows.reduce((a,r)=>a+r.invBonus,0),c:"var(--twin2)"});
   if(res.rows.some(r=>r.perfBonus>0))items.push({t:"Performance bonus",v:res.rows.reduce((a,r)=>a+r.perfBonus,0),c:"var(--up)"});
@@ -1499,6 +1533,8 @@ const COLS=[
   {id:"topup",label:"Top-up",get:r=>r.topup?money(r.topup):"—"},
   {id:"wd",label:"Withdrawal",get:r=>r.withdrawal?"−"+money(r.withdrawal):"—"},
   {id:"wdcum",label:"Withdrawn to date",get:r=>r.withdrawnCum?money(r.withdrawnCum):"—"},
+  {id:"main",label:"Main acct",get:r=>money(r.main)},
+  {id:"divacct",label:"Dividend acct",get:r=>r.divAcct?money(r.divAcct):"—"},
   {id:"invested",label:"Invested",get:r=>money(r.invested)},
   {id:"bonus",label:"Bonus $",sav:1,get:r=>money(r.special+r.invBonus+r.perfBonus)},
   {id:"av0",label:"Value @0%",sav:1,get:r=>money(r.av0)},
@@ -1510,7 +1546,7 @@ const COLS=[
   {id:"surr",label:"Surrender %",get:r=>r.surrender?pct(r.surrender):"—"},
   {id:"cashout",label:"Cash out",get:r=>money(r.cashout)},
 ];
-state.hidden=new Set(["wb","topup","wd","wdcum","bonus","av0","beforeCharges"]);
+state.hidden=new Set(["wb","topup","wd","wdcum","main","divacct","bonus","av0","beforeCharges"]);
 
 function usableCols(k){
   const prot=!!PLANS[k].protection;
@@ -1590,9 +1626,15 @@ function methodRows(key,cfg){
   const sur=Object.keys(p.surrender).sort((a,b)=>a-b);
   rows.push(["Surrender charge",sur.length?sur.map(y=>`${pct(p.surrender[y])}`).join(" → ")+" (years 1 onward)":"none at any time"]);
   const fund=DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none;
-  rows.push(["Dividends",cfg.divFund==="none"
-    ? "no dividend fund selected — gains stay inside as growth"
-    : `${fund.label} · ${pct(cfg.divYield/100)} p.a. paid quarterly, ${cfg.divMode==="cash"?"taken as cash":"reinvested"}`]);
+  rows.push(["Main account","premiums, bonuses and top-ups; every charge is taken from it"]);
+  if(cfg.divFund==="none"){
+    rows.push(["Dividends","no dividend fund — the plan grows at the assumed return; there is no dividend account"]);
+  }else{
+    rows.push(["Dividends",`${fund.label} · <b>${pct(cfg.divYield/100)} p.a.</b> paid quarterly out of the main account. <b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's distribution.`]);
+    rows.push(["Dividend account",cfg.divMode==="cash"
+      ? "not created — distributions are taken as cash and leave the policy"
+      : `holds the reinvested distributions, <b>no charges</b>, compounding at the fund's ${pct(cfg.divYield/100)} a year`]);
+  }
   if(Object.keys(cfg.topups||{}).length)rows.push(["Ad-hoc top-ups",topupText(cfg)]);
   rows.push(["Withdrawals",withdrawalText(cfg)]);
   return rows;
@@ -1708,19 +1750,24 @@ function renderFoot(){
   (3) Invest Easy charges its 3% entry fee twice in year 1. Switch <b>sheet-exact</b> on to get the spreadsheet's
   own numbers back, including its flat, un-banded welcome bonuses.
   <br><br>
-  <b>Dividends</b> are modelled as a quarterly distribution from the selected fund — the AIA Global Adventurous
-  Income (target 6–7% p.a.) or Global Dynamic Income (4–5%), Ex-Dates in March, June, September and December.
-  <b>Reinvest</b> keeps the money in the policy as extra units and compounds; <b>take cash</b> pays it out and the
-  account loses that value, so the difference between the two is the true cost of taking the income. A policy
-  started part-way through the year receives fewer than four payments in year 1. The yield is an assumption you
-  set, not a promise: AIA declares the rate each quarter, distributions may be paid out of capital, and neither
-  capital nor dividends are guaranteed. Use the fund's last four declared dividends for a more honest figure.
+  <b>Dividends</b> are modelled as quarterly distributions out of the <b>main account</b> (which holds the
+  premiums, bonuses and top-ups and pays every charge) — the AIA Global Adventurous Income (target 6–7% p.a.)
+  or Global Dynamic Income (4–5%), Ex-Dates in March, June, September and December. Choosing a fund is
+  <b>exclusive</b>: the plan's assumed return does not apply, and the client is entitled to the fund's
+  distribution instead. <b>Reinvest</b> moves each distribution into a separate <b>dividend account</b> that
+  carries no charges and compounds at the fund's own rate; <b>take cash</b> pays it out and no dividend account
+  is created. A policy started part-way through the year receives fewer than four payments in year 1. The rate
+  is an assumption you set, not a promise: AIA declares each quarter, distributions may be paid out of capital,
+  and neither capital nor dividends are guaranteed. Use the fund's last four declared dividends for a more
+  honest figure.
   <br><br>
   ${protBit}
   <br><br>
   Projections use a flat assumed return and each plan's charges as written. This is a reference illustration,
   <b>not advice</b>, and not a forecast.`;
-  $("#assumpPill").textContent=`${pct(state.rate/100)} p.a. · ${state.ageTo-state.ageFrom} yrs · age ${state.ageFrom}→${state.ageTo}`;
+  $("#assumpPill").textContent=state.divFund!=="none"
+    ? `fund ${pct(state.divYield/100)} p.a. · ${state.ageTo-state.ageFrom} yrs · age ${state.ageFrom}→${state.ageTo}`
+    : `${pct(state.rate/100)} p.a. · ${state.ageTo-state.ageFrom} yrs · age ${state.ageFrom}→${state.ageTo}`;
 }
 
 function paintParity(){
@@ -1794,7 +1841,8 @@ const CSV_BASE=[["year",r=>r.year],["age",r=>r.age],["premium_sgd",r=>r.premium]
   ["welcome_bonus_pct",r=>r.wb*100],["topup_sgd",r=>r.topup],
   ["invested_sgd",r=>r.invested],["bonus_amount_sgd",r=>r.special+r.invBonus+r.perfBonus],
   ["value_at_0pct_sgd",r=>r.av0],["before_charges_sgd",r=>r.beforeCharges],
-  ["charge_sgd",r=>r.charge],["net_value_sgd",r=>r.net],
+  ["charge_sgd",r=>r.charge],["net_value_sgd",r=>r.total],
+  ["main_account_sgd",r=>r.main],["dividend_account_sgd",r=>r.divAcct],
   ["dividend_sgd",r=>r.dividend],["dividend_to_date_sgd",r=>r.divCum],
   ["withdrawal_sgd",r=>r.withdrawal],["withdrawn_to_date_sgd",r=>r.withdrawnCum],
   ["surrender_pct",r=>r.surrender*100],["cash_out_sgd",r=>r.cashout]];
@@ -1822,7 +1870,7 @@ function reportModel(k,cfg){
   const assumptions=[
     ["Annual premium",money(cfg.premium)],
     [prot?"Premium term":"Premiums paid for",cfg.payYears+" year"+(cfg.payYears>1?"s":"")],
-    ["Assumed return",pct(cfg.rate/100)+" p.a."],
+    ["Assumed return",cfg.divFund!=="none"?"not applied — the dividend fund replaces it":pct(cfg.rate/100)+" p.a."],
     ["Age now → projected to",cfg.ageFrom+" → "+cfg.ageTo+"  ("+Math.max(1,cfg.ageTo-cfg.ageFrom)+" years)"]
   ];
   if(prot){
@@ -1837,8 +1885,8 @@ function reportModel(k,cfg){
     assumptions.push(["Extra welcome bonus",cfg.promo?pct(cfg.promo)+" of the year-1 premium":"none"]);
     assumptions.push(["Ad-hoc top-ups",topupText(cfg)]);
     assumptions.push(["Dividends",cfg.divFund==="none"
-      ? "no dividend fund — gains stay inside as growth"
-      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" p.a. "+(cfg.divMode==="cash"?"taken as cash":"reinvested")+", policy starts month "+cfg.startMonth]);
+      ? "no dividend fund — the plan grows at the assumed return; no dividend account"
+      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" p.a. paid quarterly out of the main account; the assumed return does not apply. "+(cfg.divMode==="cash"?"Taken as cash — no dividend account.":"Reinvested into a separate charge-free dividend account that earns the fund's rate.")]);
   }
   assumptions.push(["Withdrawals",withdrawalText(cfg)]);
   assumptions.push(["Sheet-exact model",cfg.exact?"on — reproduces the spreadsheet to the cent":"off — the three documented corrections are applied"]);
@@ -1851,6 +1899,7 @@ function reportModel(k,cfg){
   ];
   if(!prot&&cfg.divFund!=="none")
     summary.push([cfg.divMode==="cash"?"Dividends taken":"Dividends reinvested",money(s.dividends)]);
+  if(s.divAcct>0)summary.push(["Dividend account at age "+cfg.ageTo,money(s.divAcct)]);
   if(prot){
     summary.push(["Death cover",money(cfg.insured)+" (pays the higher of this and the policy value)"]);
     summary.push(["Protection charges to date",money(res.rows.reduce((a,x)=>a+x.coi,0))]);
