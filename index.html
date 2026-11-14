@@ -454,7 +454,33 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
             <button class="tbtn" id="tuAdd" style="padding:9px 11px">Add</button>
           </div>
           <div class="chips" id="tuList"></div>
-          <div class="hint">Top-ups are free of charges and land in the account immediately.</div>
+          <div class="hint" id="tuHint">Top-ups are free of charges and land in the account immediately.</div>
+        </div>
+
+        <div class="field" id="wdField">
+          <label>Ad-hoc withdrawal</label>
+          <div class="tu">
+            <div class="inp"><input id="wdYear" type="number" min="1" max="100" step="1" placeholder="year"></div>
+            <div class="inp"><span class="pfx">S$</span><input id="wdAmt" type="number" min="0" step="500" placeholder="amount"></div>
+            <button class="tbtn" id="wdAdd" style="padding:9px 11px">Add</button>
+          </div>
+          <div class="chips" id="wdList"></div>
+          <div class="hint">Taken at the end of the chosen policy year, after that year's growth and charges — capped at the value available.</div>
+          <div id="wdShort"></div>
+        </div>
+
+        <div class="sw" id="wdRegRow">
+          <div>Regular withdrawal<small>Fixed amount every year from a chosen year</small></div>
+          <button class="tog" id="wdRegTog"></button>
+        </div>
+        <div class="field" id="wdRegField" style="display:none;margin-top:10px">
+          <label>Amount <b id="wdRegNote"></b></label>
+          <div class="tu">
+            <div class="inp"><span class="pfx">S$</span><input id="wdRegAmt" type="number" min="1000" step="500"></div>
+            <div class="inp"><input id="wdRegFrom" type="number" min="1" max="100" step="1"><span class="sfx">from yr</span></div>
+            <div class="inp"><input id="wdRegTo" type="number" min="1" max="100" step="1"><span class="sfx">to yr</span></div>
+          </div>
+          <div class="hint" id="wdRegHint"></div>
         </div>
 
         <div class="field" id="divField">
@@ -728,7 +754,17 @@ function project(key,o){
   const divY=(fundOk?Math.max(0,(o.divYield===undefined?0:o.divYield)):0)/100;   // annual yield, decimal
   const divMode=o.divMode||"reinvest";                                 // reinvest | cash
   const startMonth=Math.max(1,Math.min(12,o.startMonth||1));
-  const rows=[]; let invested=0,av=0,net=0,divCum=0,cashCum=0,reinvCum=0;
+  /* Withdrawals. A regular withdrawal is a FIXED yearly amount with a S$1,000
+     floor, taken at the end of each chosen policy year; one-off withdrawals are
+     keyed by year the same way. Nothing can take the policy value below zero —
+     a capped request is recorded as a shortfall instead. */
+  const wdAdhoc=o.wdAdhoc||{};
+  const regOn=!!o.wdRegOn;
+  const regAmtRaw=Math.max(0,+(o.wdRegAmt||0));
+  const regAmt=regAmtRaw>0?Math.max(1000,regAmtRaw):0;
+  const regFrom=Math.max(1,Math.round(o.wdRegFrom||1));
+  const regTo=Math.max(regFrom,Math.round(o.wdRegTo||years));
+  const rows=[]; let invested=0,av=0,net=0,divCum=0,cashCum=0,reinvCum=0,wdCum=0,wdShortCum=0;
   for(let t=1;t<=years;t++){
     const b=t<=pay?o.premium:0;
     const band=wbBandFor(p,o.premium);
@@ -784,6 +820,11 @@ function project(key,o){
       }
       av=net;
     }
+    const wdReq=(+(wdAdhoc[t]||0))+((regOn&&regAmt>0&&t>=regFrom&&t<=regTo)?regAmt:0);
+    const wd=Math.min(wdReq,Math.max(0,net));
+    if(wd>0){ net=Math.max(0,net-wd); av=Math.max(0,av-wd); }
+    const wdShort=Math.max(0,wdReq-wd);
+    wdCum+=wd; wdShortCum+=wdShort;
     divCum+=dividend;
     if(divMode==="cash") cashCum+=dividend; else reinvCum+=dividend;
     const s=p.surrender[t]||0;
@@ -791,6 +832,7 @@ function project(key,o){
       invBonus:inv,perfBonus:perfBonus,invested:invested,av0:av0,beforeCharges:av,
       net:net,charge:charge,dividend:dividend,divCum:divCum,cashCum:cashCum,
       divPaid:divMode==="cash"?dividend:0,divReinvested:divMode==="cash"?0:dividend,
+      withdrawal:wd,wdShort:wdShort,withdrawnCum:wdCum,
       total:net,surrender:s,cashout:net*(1-s)});
   }
   const last=rows[rows.length-1];
@@ -800,7 +842,8 @@ function project(key,o){
   const breakEven=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
   return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
     value:last.total,net:last.net,dividends:divCum,cash:cashCum,reinvested:reinvCum,
-    profit:last.total+last.cashCum-premiums,multiple:premiums?last.total/premiums:0,
+    withdrawn:wdCum,wdShort:wdShortCum,
+    profit:last.total+last.cashCum+wdCum-premiums,multiple:premiums?last.total/premiums:0,
     breakEven:breakEven?breakEven.year:null,last}};
 }
 
@@ -819,6 +862,12 @@ function projectPLP2(o){
   const tpdCover=Math.max(0,o.tpdCover||0), lccCover=Math.max(0,o.lccCover||0), relCover=Math.max(0,o.relCover||0);
   const premMonths=Math.round((o.premYears||years)*12);
   const step=12/perYear, perPrem=prem/perYear;
+  const topups=o.topups||{}, wdAdhoc=o.wdAdhoc||{};
+  const regOn=!!o.wdRegOn;
+  const regAmtRaw=Math.max(0,+(o.wdRegAmt||0));
+  const regAmt=regAmtRaw>0?Math.max(1000,regAmtRaw):0;
+  const regFrom=Math.max(1,Math.round(o.wdRegFrom||1));
+  const regTo=Math.max(regFrom,Math.round(o.wdRegTo||years));
   // premium charge bands, expressed in NUMBER OF REGULAR PREMIUMS paid
   const bands=perYear===1?[[1,.80],[2,.55],[3,.50],[4,.08]]
             :perYear===2?[[2,.80],[4,.55],[6,.50],[8,.08]]
@@ -827,12 +876,18 @@ function projectPLP2(o){
   const chargeFor=n=>{for(const [upto,p] of bands){if(n<=upto)return p;}return 0;};
   const f=(1+(o.rate||0)-amc)**(1/12);          // fund growth net of the management charge
   let pv=0, paid=0, invested=0, rows=[];
-  let yPrem=0,yPc=0,yFee=0,yCoi=0,yTpd=0,yLcc=0,yRel=0;
+  let yPrem=0,yPc=0,yFee=0,yCoi=0,yTpd=0,yLcc=0,yRel=0,yTop=0;
+  let wdCum=0,wdShortCum=0;
   for(let m=1;m<=years*12;m++){
     const y=Math.floor((m-1)/12)+1, age=age0+y-1;
     if((m-1)%12===0){
       if(m>1) push(y-1);
-      yPrem=0;yPc=0;yFee=0;yCoi=0;yTpd=0;yLcc=0;yRel=0;   // reset the yearly buckets
+      yPrem=0;yPc=0;yFee=0;yCoi=0;yTpd=0;yLcc=0;yRel=0;yTop=0;   // reset the yearly buckets
+      /* Single top-ups buy units at the start of the chosen policy year. No
+         premium charge is applied — the product summary carries no top-up
+         charge schedule, so none is invented here. */
+      const topNow=+(topups[y]||0);
+      if(topNow>0){ pv+=topNow; yTop+=topNow; }
     }
     let credit=0;
     if(m<=premMonths && ((m-1)%step===0)){
@@ -858,10 +913,17 @@ function projectPLP2(o){
   function push(y){
     const sf={1:0.75,2:0.50}[y]||0;
     const riders=tpdCover+lccCover+relCover;
-    rows.push({year:y,age:age0+y,premium:Math.round(yPrem),wb:0,topup:0,special:0,
+    /* Withdrawals are taken at the end of the policy year they are set for. */
+    const req=(+(wdAdhoc[y]||0))+((regOn&&regAmt>0&&y>=regFrom&&y<=regTo)?regAmt:0);
+    const wd=Math.min(req,Math.max(0,pv));
+    pv=Math.max(0,pv-wd);
+    const short=Math.max(0,req-wd);
+    wdCum+=wd; wdShortCum+=short;
+    rows.push({year:y,age:age0+y,premium:Math.round(yPrem),wb:0,topup:yTop,special:0,
       invBonus:0,perfBonus:0,invested:invested,av0:invested,beforeCharges:pv,
       net:pv,total:pv,charge:yPc+yFee+yCoi,premCharge:yPc,policyFee:yFee,
       coi:yCoi,coiTpd:yTpd,coiLcc:yLcc,coiRel:yRel,
+      withdrawal:wd,wdShort:short,withdrawnCum:wdCum,
       death:Math.max(insured,pv),dividend:0,divCum:0,cashCum:0,divPaid:0,divReinvested:0,
       surrender:sf,cashout:pv*(1-sf),cumPremiums:invested});
   }
@@ -871,7 +933,8 @@ function projectPLP2(o){
   const be=rows.find(r=>r.cashout>=r.cumPremiums&&r.cumPremiums>0);
   return {rows,sum:{premiums,charges,chargesPct:premiums?charges/premiums:0,
     value:last.net,net:last.net,dividends:0,cash:0,reinvested:0,
-    profit:last.net-premiums,multiple:premiums?last.net/premiums:0,
+    withdrawn:wdCum,wdShort:wdShortCum,
+    profit:last.net+wdCum-premiums,multiple:premiums?last.net/premiums:0,
     breakEven:be?be.year:null,last}};
 }
 
@@ -942,6 +1005,7 @@ const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
   divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
   insured:300000,sex:0,smoker:false,
   perYear:1,amc:1.5,tpdCover:300000,lccCover:100000,relCover:100000,
+  wdAdhoc:{},wdRegOn:false,wdRegAmt:1000,wdRegFrom:11,wdRegTo:60,
   configs:{},saved:{}};
 
 const $=s=>document.querySelector(s);
@@ -958,7 +1022,8 @@ const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==u
 const LS_KEY="ilp-studio:configs:v1";
 const CFG_KEYS=["premium","payYears","rate","ageFrom","ageTo","promo","topups","exact",
   "divFund","divYield","divMode","startMonth","insured","sex","smoker","perYear","amc",
-  "tpdCover","lccCover","relCover"];
+  "tpdCover","lccCover","relCover",
+  "wdAdhoc","wdRegOn","wdRegAmt","wdRegFrom","wdRegTo"];
 const clampN=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 const numOr=(v,fb)=>{const n=+v;return isFinite(n)?n:fb;};
 
@@ -973,11 +1038,14 @@ function normalizeTopups(t){
 /* The factory state of a plan — what clicking its card used to load. */
 function demoConfig(k){
   const p=PLANS[k];
+  const from=p.demoFrom||30,to=p.demoTo||60,horizon=Math.max(1,to-from);
   return {premium:p.demo,payYears:p.pay,rate:p.rate,
-    ageFrom:p.demoFrom||30,ageTo:p.demoTo||60,promo:0,topups:{},exact:false,
+    ageFrom:from,ageTo:to,promo:0,topups:{},exact:false,
     divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,
     insured:p.demoInsured||300000,sex:0,smoker:false,perYear:p.demoPerYear||1,
-    amc:p.demoAmc||1.5,tpdCover:p.demoTpd||0,lccCover:p.demoLcc||0,relCover:p.demoRel||0};
+    amc:p.demoAmc||1.5,tpdCover:p.demoTpd||0,lccCover:p.demoLcc||0,relCover:p.demoRel||0,
+    wdAdhoc:{},wdRegOn:false,wdRegAmt:1000,
+    wdRegFrom:Math.max(1,Math.min(p.pay+1,horizon)),wdRegTo:horizon};
 }
 /* Coerce anything that came from storage (or a stale schema) into a valid config. */
 function cleanCfg(c,base){
@@ -1003,9 +1071,16 @@ function cleanCfg(c,base){
   d.tpdCover=Math.max(0,numOr(c.tpdCover,b.tpdCover));
   d.lccCover=Math.max(0,numOr(c.lccCover,b.lccCover));
   d.relCover=Math.max(0,numOr(c.relCover,b.relCover));
+  d.wdAdhoc=normalizeTopups(c.wdAdhoc!==undefined?c.wdAdhoc:b.wdAdhoc);
+  d.wdRegOn=!!(c.wdRegOn!==undefined?c.wdRegOn:b.wdRegOn);
+  d.wdRegAmt=Math.max(0,numOr(c.wdRegAmt,b.wdRegAmt));
+  if(d.wdRegAmt>0&&d.wdRegAmt<1000)d.wdRegAmt=1000;   // S$1,000 a year minimum
+  d.wdRegFrom=clampN(Math.round(numOr(c.wdRegFrom,b.wdRegFrom)),1,100);
+  d.wdRegTo=clampN(Math.round(numOr(c.wdRegTo,b.wdRegTo)),1,100);
+  if(d.wdRegTo<d.wdRegFrom)d.wdRegTo=d.wdRegFrom;
   return d;
 }
-function snapshotOf(c){const o={};CFG_KEYS.forEach(k=>{o[k]=k==="topups"?normalizeTopups(c[k]):c[k];});return o;}
+function snapshotOf(c){const o={};CFG_KEYS.forEach(k=>{o[k]=(k==="topups"||k==="wdAdhoc")?normalizeTopups(c[k]):c[k];});return o;}
 function sameCfg(a,b){return JSON.stringify(snapshotOf(a))===JSON.stringify(snapshotOf(b));}
 
 function workingCfg(k){
@@ -1014,7 +1089,7 @@ function workingCfg(k){
 }
 function isDirty(k){return !sameCfg(workingCfg(k),state.saved[k]||demoConfig(k));}
 function commitActive(){state.configs[state.plan]=snapshotOf(state);}
-function applyCfg(c){CFG_KEYS.forEach(k=>{state[k]=k==="topups"?Object.assign({},c[k]||{}):c[k];});}
+function applyCfg(c){CFG_KEYS.forEach(k=>{state[k]=(k==="topups"||k==="wdAdhoc")?Object.assign({},c[k]||{}):c[k];});}
 
 function readSaved(){
   const out={};
@@ -1052,6 +1127,7 @@ function loadPlan(k){
 }
 function saveCurrent(){
   const k=state.plan;
+  if(state.wdRegAmt>0&&state.wdRegAmt<1000)state.wdRegAmt=1000;   // enforce the floor before storing
   state.saved[k]=snapshotOf(state);
   state.configs[k]=snapshotOf(state);
   const ok=writeSaved();
@@ -1151,13 +1227,24 @@ function syncInputs(){
     b.classList.toggle("on",b.dataset.mode===state.divMode));
   renderDivHint();
   $("#exactTog").className="tog"+(state.exact?" on":"");
+  $("#wdRegTog").className="tog"+(state.wdRegOn?" on":"");
+  $("#wdRegField").style.display=state.wdRegOn?"":"none";
+  $("#wdRegAmt").value=state.wdRegAmt||1000;
+  $("#wdRegFrom").value=state.wdRegFrom;
+  $("#wdRegTo").value=state.wdRegTo;
+  $("#wdRegHint").innerHTML=(state.wdRegAmt>0&&state.wdRegAmt<1000)
+    ? '<span class="hint warn">Minimum S$1,000 a year.</span>'
+    : `Fixed amount each year from policy year ${state.wdRegFrom} to ${state.wdRegTo}, taken at the end of each of those years.`;
   const prot=isProtection();
   $("#protCard").style.display=prot?"":"none";
   $("#bonusCard").style.display=prot?"none":"";
   $("#promoField").style.display=prot?"none":"";
-  $("#topupField").style.display=prot?"none":"";
+  $("#topupField").style.display="";
   $("#divField").style.display=prot?"none":"";
   $("#exactRow").style.display=prot?"none":"";
+  $("#tuHint").innerHTML=prot
+    ? "Top-ups buy units at the start of the chosen policy year. No premium charge applies — the product summary carries no top-up charge schedule."
+    : "Top-ups are free of charges and land in the account immediately.";
   if(prot){
     $("#insured").value=state.insured;
     $("#sex").value=String(state.sex);
@@ -1196,7 +1283,7 @@ function syncInputs(){
   $("#premHint").innerHTML=below
     ? `<span class="hint warn">Below the plan minimum of ${money(p.min)} — the sheet would reject this.</span>`
     : `${bandTxt}`;
-  renderTopups();
+  renderTopups();renderWdAdhoc();
 }
 function quartersInYear1(){return EX_MONTHS.filter(m=>m>=state.startMonth).length;}
 function divPayments(){return 4;}
@@ -1240,6 +1327,16 @@ function renderTopups(){
     box.appendChild(c);
   });
 }
+function renderWdAdhoc(){
+  const box=$("#wdList");box.innerHTML="";
+  const ks=Object.keys(state.wdAdhoc).map(Number).sort((a,b)=>a-b);
+  if(!ks.length){box.innerHTML='<span class="hint">No one-off withdrawals.</span>';return;}
+  ks.forEach(y=>{
+    const c=el("span","chipx",`Yr ${y} · ${money(state.wdAdhoc[y])} <button title="remove">×</button>`);
+    c.querySelector("button").onclick=()=>{delete state.wdAdhoc[y];renderWdAdhoc();render();};
+    box.appendChild(c);
+  });
+}
 
 /* A sticky sidebar taller than the viewport cannot be scrolled to, so it only
    sticks when it fits; otherwise it scrolls with the page. */
@@ -1275,6 +1372,11 @@ function renderKpis(res){
       v:money(s.dividends),
       s:state.divMode==="cash"?`${money(s.dividends/4)} a quarter at ${pct(state.divYield/100)}`
                               :`${money(s.dividends/4)} a quarter, left in to compound`});
+  }
+  if(s.withdrawn>0||s.wdShort>0){
+    cards.push({k:"Withdrawn",v:money(s.withdrawn),cls:"",
+      s:s.wdShort>0?`${money(s.wdShort)} requested but unavailable`
+                   :"taken out over the projection"});
   }
   cards.forEach(c=>{
     const d=el("div","kpi"+(c.hero?" hero-k":""));
@@ -1354,6 +1456,7 @@ function renderChart(res){
     xh.setAttribute("x1",x(i));xh.setAttribute("x2",x(i));xh.setAttribute("opacity",".5");
     tip.innerHTML=`<b>Year ${r.year} · age ${r.age}</b>
       <div class="r"><span>Value</span><span>${money(r.total)}</span></div>
+      ${r.withdrawal>0?`<div class="r"><span>Withdrawal</span><span>−${money(r.withdrawal)}</span></div>`:""}
       ${r.dividend>0?`<div class="r"><span>${state.divMode==="cash"?"Paid out":"Reinvested"}</span><span>${money(r.dividend)}</span></div>
       <div class="r"><span>Div. to date</span><span>${money(r.divCum)}</span></div>`:""}
       <div class="r"><span>Money in</span><span>${money(r.cumPremiums)}</span></div>
@@ -1376,6 +1479,7 @@ function renderBars(res){
   ];
   if(s.dividends>0)items.push({t:state.divMode==="cash"?"Dividends paid":"Dividends reinvested",
     v:s.dividends,c:"var(--twin1)"});
+  if(s.withdrawn>0)items.push({t:"Withdrawn",v:s.withdrawn,c:"var(--gold)"});
   if(res.rows.some(r=>r.special>0))items.push({t:"Special bonuses",v:res.rows.reduce((a,r)=>a+r.special,0),c:"var(--gold)"});
   if(res.rows.some(r=>r.invBonus>0))items.push({t:"Investment bonus",v:res.rows.reduce((a,r)=>a+r.invBonus,0),c:"var(--twin2)"});
   if(res.rows.some(r=>r.perfBonus>0))items.push({t:"Performance bonus",v:res.rows.reduce((a,r)=>a+r.perfBonus,0),c:"var(--up)"});
@@ -1393,6 +1497,8 @@ const COLS=[
   {id:"coi",label:"Protection chg",prot:1,get:r=>r.coi?"−"+money(r.coi):"—"},
   {id:"death",label:"Death benefit",prot:1,get:r=>r.death?money(r.death):"—"},
   {id:"topup",label:"Top-up",get:r=>r.topup?money(r.topup):"—"},
+  {id:"wd",label:"Withdrawal",get:r=>r.withdrawal?"−"+money(r.withdrawal):"—"},
+  {id:"wdcum",label:"Withdrawn to date",get:r=>r.withdrawnCum?money(r.withdrawnCum):"—"},
   {id:"invested",label:"Invested",get:r=>money(r.invested)},
   {id:"bonus",label:"Bonus $",sav:1,get:r=>money(r.special+r.invBonus+r.perfBonus)},
   {id:"av0",label:"Value @0%",sav:1,get:r=>money(r.av0)},
@@ -1404,7 +1510,7 @@ const COLS=[
   {id:"surr",label:"Surrender %",get:r=>r.surrender?pct(r.surrender):"—"},
   {id:"cashout",label:"Cash out",get:r=>money(r.cashout)},
 ];
-state.hidden=new Set(["wb","topup","bonus","av0","beforeCharges"]);
+state.hidden=new Set(["wb","topup","wd","wdcum","bonus","av0","beforeCharges"]);
 
 function usableCols(k){
   const prot=!!PLANS[k].protection;
@@ -1436,6 +1542,18 @@ function renderTable(res){
 }
 
 /* ---------- method ---------- */
+function topupText(cfg){
+  const ks=Object.keys(cfg.topups||{}).map(Number).sort((a,b)=>a-b);
+  return ks.length?ks.map(y=>"yr "+y+": "+money(cfg.topups[y])).join(" · "):"none";
+}
+function withdrawalText(cfg){
+  const parts=[];
+  const ks=Object.keys(cfg.wdAdhoc||{}).map(Number).sort((a,b)=>a-b);
+  ks.forEach(y=>parts.push("one-off yr "+y+": "+money(cfg.wdAdhoc[y])));
+  if(cfg.wdRegOn&&cfg.wdRegAmt>0)
+    parts.push(money(Math.max(1000,cfg.wdRegAmt))+"/yr, policy years "+cfg.wdRegFrom+"–"+cfg.wdRegTo);
+  return parts.length?parts.join(" · "):"none";
+}
 function methodRows(key,cfg){
   const p=PLANS[key],rows=[];
   if(p.protection){
@@ -1454,6 +1572,8 @@ function methodRows(key,cfg){
     rows.push(["Maturity","policy value at age 100; no-lapse guarantee for the first 10 years while premiums are paid"]);
     rows.push(["Reconciled","against AIA's own Policy Illustrations — within <b>0.5%</b> a year at a 4% return and <b>0.6%</b> at 8% over 40 years, with the TPD, Lifetime Critical Cover and Relapse riders in force"]);
     rows.push(["Not modelled","Total Critical Accelerator charges, the PowerUp Dollar Vitality credit, premium holiday and partial withdrawals"]);
+    rows.push(["Top-ups",topupText(cfg)]);
+    rows.push(["Withdrawals",withdrawalText(cfg)+" — taken at the end of each policy year, capped at the value available"]);
     return rows;
   }
   rows.push(["Premium term",`${p.pay} year${p.pay>1?"s":""} · minimum ${money(p.min)} per year`]);
@@ -1473,6 +1593,8 @@ function methodRows(key,cfg){
   rows.push(["Dividends",cfg.divFund==="none"
     ? "no dividend fund selected — gains stay inside as growth"
     : `${fund.label} · ${pct(cfg.divYield/100)} p.a. paid quarterly, ${cfg.divMode==="cash"?"taken as cash":"reinvested"}`]);
+  if(Object.keys(cfg.topups||{}).length)rows.push(["Ad-hoc top-ups",topupText(cfg)]);
+  rows.push(["Withdrawals",withdrawalText(cfg)]);
   return rows;
 }
 function renderMethod(){
@@ -1629,7 +1751,9 @@ function cfgToOpts(c){
     divFund:c.divFund,divYield:c.divYield,divMode:c.divMode,
     startMonth:c.startMonth,insured:c.insured,sex:c.sex,smoker:c.smoker,
     premYears:c.payYears,perYear:c.perYear,amc:c.amc/100,
-    tpdCover:c.tpdCover,lccCover:c.lccCover,relCover:c.relCover};
+    tpdCover:c.tpdCover,lccCover:c.lccCover,relCover:c.relCover,
+    wdAdhoc:c.wdAdhoc,wdRegOn:c.wdRegOn,wdRegAmt:c.wdRegAmt,
+    wdRegFrom:c.wdRegFrom,wdRegTo:c.wdRegTo};
 }
 function projectOpts(over){
   return Object.assign(cfgToOpts(state),over||{});
@@ -1644,6 +1768,10 @@ function render(){
   renderRail();renderKpis(res);renderChart(res);renderBars(res);
   renderTable(res);renderMethod();renderBullets();renderBonus();renderCompare();renderFoot();
   renderDivHint(res,alt);
+  const wdBox=$("#wdShort");
+  if(wdBox)wdBox.innerHTML=res.sum.wdShort>0
+    ? `<span class="hint warn">${money(res.sum.wdShort)} of requested withdrawals could not be taken — capped at the value available.</span>`
+    : "";
   updateCfgUI();
   fitSidebar();
 }
@@ -1668,6 +1796,7 @@ const CSV_BASE=[["year",r=>r.year],["age",r=>r.age],["premium_sgd",r=>r.premium]
   ["value_at_0pct_sgd",r=>r.av0],["before_charges_sgd",r=>r.beforeCharges],
   ["charge_sgd",r=>r.charge],["net_value_sgd",r=>r.net],
   ["dividend_sgd",r=>r.dividend],["dividend_to_date_sgd",r=>r.divCum],
+  ["withdrawal_sgd",r=>r.withdrawal],["withdrawn_to_date_sgd",r=>r.withdrawnCum],
   ["surrender_pct",r=>r.surrender*100],["cash_out_sgd",r=>r.cashout]];
 const CSV_PROT=[["premium_charge_sgd",r=>r.premCharge],["protection_charge_sgd",r=>r.coi],
   ["death_benefit_sgd",r=>r.death]];
@@ -1703,14 +1832,15 @@ function reportModel(k,cfg){
     assumptions.push(["Fund management charge",cfg.amc.toFixed(2)+"% p.a."]);
     assumptions.push(["TPD / Critical / Relapse cover",
       [cfg.tpdCover,cfg.lccCover,cfg.relCover].map(v=>v?money(v):"excluded").join(" · ")]);
+    assumptions.push(["Ad-hoc top-ups",topupText(cfg)]);
   }else{
     assumptions.push(["Extra welcome bonus",cfg.promo?pct(cfg.promo)+" of the year-1 premium":"none"]);
-    const tus=Object.keys(cfg.topups).map(Number).sort((a,b)=>a-b);
-    assumptions.push(["Ad-hoc top-ups",tus.length?tus.map(y=>"yr "+y+": "+money(cfg.topups[y])).join(" · "):"none"]);
+    assumptions.push(["Ad-hoc top-ups",topupText(cfg)]);
     assumptions.push(["Dividends",cfg.divFund==="none"
       ? "no dividend fund — gains stay inside as growth"
       : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" p.a. "+(cfg.divMode==="cash"?"taken as cash":"reinvested")+", policy starts month "+cfg.startMonth]);
   }
+  assumptions.push(["Withdrawals",withdrawalText(cfg)]);
   assumptions.push(["Sheet-exact model",cfg.exact?"on — reproduces the spreadsheet to the cent":"off — the three documented corrections are applied"]);
   const summary=[
     ["Value at age "+cfg.ageTo,money(s.value)],
@@ -1725,6 +1855,8 @@ function reportModel(k,cfg){
     summary.push(["Death cover",money(cfg.insured)+" (pays the higher of this and the policy value)"]);
     summary.push(["Protection charges to date",money(res.rows.reduce((a,x)=>a+x.coi,0))]);
   }
+  if(s.withdrawn>0||s.wdShort>0)
+    summary.push(["Total withdrawn",money(s.withdrawn)+(s.wdShort>0?"  ("+money(s.wdShort)+" requested but unavailable)":"")]);
   return {k,p,cfg,res,sum:s,prot,assumptions,summary,
     cols:usableCols(k),method:methodRows(k,cfg),
     belowMin:!!(p.min>0&&cfg.premium<p.min)};
@@ -1797,6 +1929,42 @@ $("#tuAdd").onclick=()=>{
   $("#tuYear").value="";$("#tuAmt").value="";
   renderTopups();render();
 };
+$("#wdAdd").onclick=()=>{
+  const y=Math.round(+$("#wdYear").value||0),a=+$("#wdAmt").value||0;
+  if(y<1||y>100||a<=0){$("#wdYear").focus();return;}
+  state.wdAdhoc[y]=(state.wdAdhoc[y]||0)+a;
+  $("#wdYear").value="";$("#wdAmt").value="";
+  renderWdAdhoc();render();
+};
+$("#wdRegTog").onclick=()=>{
+  state.wdRegOn=!state.wdRegOn;
+  if(state.wdRegOn&&(!state.wdRegAmt||state.wdRegAmt<1000))state.wdRegAmt=1000;
+  syncInputs();render();
+};
+$("#wdRegAmt").addEventListener("input",e=>{
+  const v=parseFloat(e.target.value);
+  state.wdRegAmt=isFinite(v)?Math.max(0,v):0;
+  $("#wdRegHint").innerHTML=(state.wdRegAmt>0&&state.wdRegAmt<1000)
+    ? '<span class="hint warn">Minimum S$1,000 a year — S$1,000 is what gets modelled.</span>'
+    : `Fixed amount each year from policy year ${state.wdRegFrom} to ${state.wdRegTo}, taken at the end of each of those years.`;
+  render();
+});
+$("#wdRegAmt").addEventListener("blur",()=>{
+  if(state.wdRegAmt>0&&state.wdRegAmt<1000)state.wdRegAmt=1000;
+  syncInputs();render();
+});
+$("#wdRegFrom").addEventListener("input",e=>{
+  const v=parseInt(e.target.value,10);
+  state.wdRegFrom=isFinite(v)?Math.max(1,Math.min(100,v)):1;
+  if(state.wdRegTo<state.wdRegFrom)state.wdRegTo=state.wdRegFrom;
+  render();
+});
+$("#wdRegTo").addEventListener("input",e=>{
+  const v=parseInt(e.target.value,10);
+  state.wdRegTo=isFinite(v)?Math.max(1,Math.min(100,v)):state.wdRegFrom;
+  if(state.wdRegTo<state.wdRegFrom)state.wdRegTo=state.wdRegFrom;
+  render();
+});
 $("#insured").addEventListener("input",e=>{
   const v=parseFloat(e.target.value);state.insured=isFinite(v)?Math.max(0,v):0;
   $("#iaNote").textContent=state.premium?`≈ ${(state.insured/state.premium).toFixed(0)}× premium`:"";
