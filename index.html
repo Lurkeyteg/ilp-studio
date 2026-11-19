@@ -521,18 +521,14 @@ pre.notes{white-space:pre-wrap;font-family:inherit;font-size:11.5px;color:var(--
             <div class="inp"><input id="divYield" type="number" min="0" max="15" step="0.1"><span class="sfx">% p.a.</span></div>
             <div class="inp"><input id="startMonth" type="number" min="1" max="12" step="1"><span class="sfx">policy start</span></div>
           </div>
-          <div id="divStartRow" style="margin-top:6px">
-            <div class="hint" style="margin:0 0 3px">Dividends start in</div>
-            <select id="divStartYear" class="sel"></select>
-          </div>
           <div class="seg" id="divModeSeg">
             <button data-mode="reinvest" class="on">Reinvest</button>
             <button data-mode="cash">Take cash</button>
           </div>
           <div id="drawRow" style="display:none;margin-top:6px">
-            <div class="hint" style="margin:0 0 3px">Draw dividends from</div>
+            <div class="hint" style="margin:0 0 3px">Cash dividends start in</div>
             <div class="tu">
-              <select id="divDrawFrom" class="sel" style="flex:1;min-width:0"></select>
+              <select id="divStartYear" class="sel" style="flex:1;min-width:0"></select>
               <select id="divDrawQ" class="sel" style="flex:1;min-width:0"></select>
             </div>
           </div>
@@ -809,13 +805,12 @@ function project(key,o){
   const growth=fundOn?0:rate;
   const divMode=o.divMode||"reinvest";                                 // reinvest | cash
   const startMonth=Math.max(1,Math.min(12,o.startMonth||1));
-  /* Cash drawings can start in a chosen policy year and quarter; before that,
-     distributions are reinvested into the dividend account. */
-  const drawFrom=Math.max(1,Math.round(o.divDrawFrom||1));
+  /* Cash drawings can start in a chosen policy year and quarter. Distributions
+     are earned from the first policy year either way — before the start date
+     they are reinvested into the dividend account, so the money still earns
+     the fund's return while the client waits. */
+  const cashStart=Math.max(1,Math.round(o.divStartYear||1));
   const drawQ=Math.max(1,Math.min(4,Math.round(o.divDrawQ||1)));
-  /* A policy can hold the fund from a chosen policy year: no distributions are
-     declared, paid or reinvested before it. */
-  const divStart=Math.max(1,Math.round(o.divStartYear||1));
   /* Withdrawals. A regular withdrawal is a FIXED yearly amount with a S$1,000
      floor, taken at the end of each chosen policy year; one-off withdrawals are
      keyed by year the same way. Nothing can take the policy value below zero —
@@ -890,13 +885,13 @@ function project(key,o){
        fund's rate. Cash drawings can start in a chosen year and quarter: every
        distribution before that point is reinvested instead. */
     let dividend=0,divPaid=0,divReinvested=0;
-    if(fundOn&&t>=divStart){
+    if(fundOn){
       const qn=divY/4;
       const perQ=Math.max(0,divBase)*qn;
       for(const q of activeQuarters(t,startMonth)){
         dividend+=perQ;
         divAcct=divAcct*(1+qn);
-        const toCash=divMode==="cash"&&(t>drawFrom||(t===drawFrom&&q>=drawQ));
+        const toCash=divMode==="cash"&&(t>cashStart||(t===cashStart&&q>=drawQ));
         if(toCash){ cashCum+=perQ; divPaid+=perQ; }
         else { divAcct+=perQ; reinvCum+=perQ; divReinvested+=perQ; }
       }
@@ -1108,7 +1103,7 @@ function fmt(n){return n>=0?"S$"+n.toLocaleString("en-SG",{maximumFractionDigits
    ============================================================ */
 const state={plan:"APA30",premium:12000,payYears:10,rate:8,ageFrom:30,ageTo:60,
   promo:0,topups:{},exact:false,hidden:new Set(),hover:null,
-  divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,divDrawFrom:1,divDrawQ:1,divStartYear:1,
+  divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,divDrawQ:1,divStartYear:1,
   easyPay:"cash",regTopOn:false,regTopAmt:0,regTopFreq:12,
   insured:300000,sex:0,smoker:false,
   perYear:1,amc:1.5,tpdCover:300000,lccCover:100000,relCover:100000,
@@ -1128,7 +1123,7 @@ const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!==u
    ============================================================ */
 const LS_KEY="ilp-studio:configs:v1";
 const CFG_KEYS=["premium","payYears","rate","ageFrom","ageTo","promo","topups","exact",
-  "divFund","divYield","divMode","startMonth","divDrawFrom","divDrawQ","divStartYear",
+  "divFund","divYield","divMode","startMonth","divDrawQ","divStartYear",
   "easyPay","regTopOn","regTopAmt","regTopFreq","insured","sex","smoker","perYear","amc",
   "tpdCover","lccCover","relCover",
   "wdAdhoc","wdRegOn","wdRegAmt","wdRegFrom","wdRegTo"];
@@ -1149,7 +1144,7 @@ function demoConfig(k){
   const from=p.demoFrom||30,to=p.demoTo||60,horizon=Math.max(1,to-from);
   return {premium:p.demo,payYears:p.pay,rate:p.rate,
     ageFrom:from,ageTo:to,promo:0,topups:{},exact:false,
-    divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,divDrawFrom:1,divDrawQ:1,divStartYear:1,
+    divFund:"none",divYield:0,divMode:"reinvest",startMonth:1,divDrawQ:1,divStartYear:1,
     easyPay:"cash",regTopOn:false,regTopAmt:0,regTopFreq:12,
     insured:p.demoInsured||300000,sex:0,smoker:false,perYear:p.demoPerYear||1,
     amc:p.demoAmc||1.5,tpdCover:p.demoTpd||0,lccCover:p.demoLcc||0,relCover:p.demoRel||0,
@@ -1172,9 +1167,9 @@ function cleanCfg(c,base){
   d.divYield=clampN(numOr(c.divYield,b.divYield),0,15);
   d.divMode=c.divMode==="cash"?"cash":"reinvest";
   d.startMonth=clampN(Math.round(numOr(c.startMonth,b.startMonth)),1,12);
-  d.divDrawFrom=clampN(Math.round(numOr(c.divDrawFrom,b.divDrawFrom)),1,100);
   d.divDrawQ=clampN(Math.round(numOr(c.divDrawQ,b.divDrawQ)),1,4);
-  d.divStartYear=clampN(Math.round(numOr(c.divStartYear,b.divStartYear)),1,100);
+  /* Older saves used divDrawFrom for the cash-start year; migrate it. */
+  d.divStartYear=clampN(Math.round(numOr(c.divStartYear!==undefined?c.divStartYear:c.divDrawFrom,b.divStartYear)),1,100);
   d.easyPay=c.easyPay==="cpf"?"cpf":"cash";
   d.regTopOn=!!(c.regTopOn!==undefined?c.regTopOn:b.regTopOn);
   d.regTopFreq=[1,2,4,12].indexOf(+c.regTopFreq)>=0?+c.regTopFreq:12;
@@ -1370,17 +1365,19 @@ function syncInputs(){
   $("#divModeSeg").style.pointerEvents=off?"none":"";
   [...document.querySelectorAll("#divModeSeg button")].forEach(b=>
     b.classList.toggle("on",b.dataset.mode===state.divMode));
-  /* Draw-from pickers: policy year (bounded by the projection) and Ex-Date quarter. */
+  /* Cash-start pickers: policy year (bounded by the projection) and Ex-Date
+     quarter. Earnings accrue from year 1 either way; this only says when the
+     client starts taking the money. */
   const yrs=Math.max(1,state.ageTo-state.ageFrom);
-  const ysel=$("#divDrawFrom");
+  const ysel=$("#divStartYear");
   if(+(ysel.dataset.yrs||0)!==yrs){
     ysel.innerHTML="";
     for(let y=1;y<=yrs;y++){const o=document.createElement("option");o.value=String(y);o.textContent="year "+y;ysel.appendChild(o);}
     ysel.dataset.yrs=String(yrs);
   }
-  if(!(state.divDrawFrom>=1))state.divDrawFrom=1;
-  if(state.divDrawFrom>yrs)state.divDrawFrom=yrs;
-  ysel.value=String(state.divDrawFrom);
+  if(!(state.divStartYear>=1))state.divStartYear=1;
+  if(state.divStartYear>yrs)state.divStartYear=yrs;
+  ysel.value=String(state.divStartYear);
   const qsel=$("#divDrawQ");
   if(!qsel.options.length){
     ["March","June","September","December"].forEach((m,i)=>{
@@ -1388,17 +1385,6 @@ function syncInputs(){
     });
   }
   qsel.value=String(clampN(Math.round(state.divDrawQ||1),1,4));
-  /* Dividend start year — bounded by the projection, hidden with no fund. */
-  const ds=$("#divStartYear");
-  if(+(ds.dataset.yrs||0)!==yrs){
-    ds.innerHTML="";
-    for(let y=1;y<=yrs;y++){const o=document.createElement("option");o.value=String(y);o.textContent="year "+y;ds.appendChild(o);}
-    ds.dataset.yrs=String(yrs);
-  }
-  if(!(state.divStartYear>=1))state.divStartYear=1;
-  if(state.divStartYear>yrs)state.divStartYear=yrs;
-  ds.value=String(state.divStartYear);
-  $("#divStartRow").style.display=off?"none":"";
   $("#drawRow").style.display=(!off&&state.divMode==="cash")?"":"none";
   renderDivHint();
   $("#exactTog").className="tog"+(state.exact?" on":"");
@@ -1472,7 +1458,7 @@ function renderDivHint(lastRes,altRes){
   }
   const y=state.divYield/100,q=quartersInYear1();
   const perYear=state.premium*y;
-  const drawFrom=Math.max(1,Math.round(state.divDrawFrom||1));
+  const drawFrom=Math.max(1,Math.round(state.divStartYear||1));
   const drawQ=clampN(Math.round(state.divDrawQ||1),1,4);
   const qname=["March","June","September","December"][drawQ-1];
   let txt=`<b>${pct(y)} a year</b>, paid in <b>four quarterly distributions</b> at the Mar / Jun / Sep / Dec Ex-Dates`
@@ -1480,14 +1466,11 @@ function renderDivHint(lastRes,altRes){
     +` (${q} payment${q===1?"":"s"} in year 1, then four a year).`
     +`<br><b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's ${pct(y)} distribution, paid from the fund's return, so it never draws down the main account.`;
   if(state.divMode==="reinvest")
-    txt+=` All distributions are <b>reinvested</b> into a separate <b>dividend account</b> with no charges, compounding quarterly at the fund's ${pct(y)} a year.`;
+    txt+=` All distributions are <b>reinvested from the first policy year</b> into a separate <b>dividend account</b> with no charges, compounding quarterly at the fund's ${pct(y)} a year.`;
   else if(drawFrom===1&&drawQ===1)
     txt+=` Taken as <b>cash from year 1, March</b> — every quarterly distribution leaves the policy, so no dividend account is created.`;
   else
-    txt+=` Taken as <b>cash from year ${drawFrom}, ${qname}</b> — every distribution before then is <b>reinvested</b> into the dividend account, which keeps compounding at the fund's rate.`;
-  const startY=Math.max(1,Math.round(state.divStartYear||1));
-  if(startY>1)
-    txt+=` Distributions <b>begin in policy year ${startY}</b> — nothing is paid or reinvested before then.`;
+    txt+=` Taken as <b>cash from year ${drawFrom}, ${qname}</b> — the distributions before then are <b>reinvested</b> into the dividend account, so the money still earns the fund's ${pct(y)} while it waits.`;
   if(lastRes&&altRes&&state.divMode==="cash"&&drawFrom===1&&drawQ===1){
     const diff=altRes.sum.value-lastRes.sum.value;   // alt.value - current.value
     if(diff>1)
@@ -1813,13 +1796,13 @@ function methodRows(key,cfg){
   if(cfg.divFund==="none"){
     rows.push(["Dividends","no dividend fund — the plan grows at the assumed return; there is no dividend account"]);
   }else{
-    rows.push(["Dividends",`${fund.label} · <b>${pct(cfg.divYield/100)} a year</b>, paid in four quarterly distributions at the Mar / Jun / Sep / Dec Ex-Dates from the fund's return — the main account is not drawn down by them. <b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's distribution.`+((Math.round(cfg.divStartYear||1)>1)?` <b>Distributions begin in policy year ${Math.round(cfg.divStartYear||1)}.</b>`:"")]);
-    const dF=Math.max(1,Math.round(cfg.divDrawFrom||1)),dQ=clampN(Math.round(cfg.divDrawQ||1),1,4);
+    rows.push(["Dividends",`${fund.label} · <b>${pct(cfg.divYield/100)} a year</b>, paid in four quarterly distributions at the Mar / Jun / Sep / Dec Ex-Dates from the fund's return — the main account is not drawn down by them. <b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's distribution.`]);
+    const dF=Math.max(1,Math.round(cfg.divStartYear||1)),dQ=clampN(Math.round(cfg.divDrawQ||1),1,4);
     const dQn=["March","June","September","December"][dQ-1];
     rows.push(["Dividend account",cfg.divMode==="cash"
       ? (dF===1&&dQ===1
           ? "not created — distributions are taken as cash and leave the policy"
-          : `distributions before year ${dF}, ${dQn} are reinvested here (<b>no charges</b>, compounding quarterly at ${pct(cfg.divYield/100)} a year); from year ${dF}, ${dQn} they are taken as cash`)
+          : `distributions before year ${dF}, ${dQn} are reinvested here (<b>no charges</b>, compounding quarterly at ${pct(cfg.divYield/100)} a year), so they keep earning; from year ${dF}, ${dQn} they are taken as cash`)
       : `holds the reinvested distributions, <b>no charges</b>, compounding quarterly at the fund's ${pct(cfg.divYield/100)} a year`]);
   }
   if(Object.keys(cfg.topups||{}).length||cfg.regTopOn)rows.push(["Ad-hoc / regular top-ups",topupText(cfg)]);
@@ -1905,7 +1888,7 @@ function renderCompare(){
   const data=ORDER.map(k=>{const p=PLANS[k];
     const r=project(k,{premium:p.demo,rate,years,payYears:p.pay,topups:{},promo:0,
       divFund:state.divFund,divYield:state.divYield,divMode:state.divMode,
-      startMonth:state.startMonth,divDrawFrom:state.divDrawFrom,divDrawQ:state.divDrawQ,divStartYear:state.divStartYear,
+      startMonth:state.startMonth,divDrawQ:state.divDrawQ,divStartYear:state.divStartYear,
       easyPay:state.easyPay,regTopOn:state.regTopOn,regTopAmt:state.regTopAmt,regTopFreq:state.regTopFreq,
       sheetExact:state.exact,ageFrom:state.ageFrom});
     return {k,p,sum:r.sum};});
@@ -1990,7 +1973,7 @@ function cfgToOpts(c){
     years:Math.max(1,c.ageTo-c.ageFrom),payYears:c.payYears,
     topups:c.topups,promo:c.promo,sheetExact:c.exact,ageFrom:c.ageFrom,
     divFund:c.divFund,divYield:c.divYield,divMode:c.divMode,
-    startMonth:c.startMonth,divDrawFrom:c.divDrawFrom,divDrawQ:c.divDrawQ,divStartYear:c.divStartYear,
+    startMonth:c.startMonth,divDrawQ:c.divDrawQ,divStartYear:c.divStartYear,
     easyPay:c.easyPay,regTopOn:c.regTopOn,regTopAmt:c.regTopAmt,regTopFreq:c.regTopFreq,
     insured:c.insured,sex:c.sex,smoker:c.smoker,
     premYears:c.payYears,perYear:c.perYear,amc:c.amc/100,
@@ -2083,7 +2066,7 @@ function reportModel(k,cfg){
     assumptions.push(["Ad-hoc top-ups",topupText(cfg)]);
     assumptions.push(["Dividends",cfg.divFund==="none"
       ? "no dividend fund — the plan grows at the assumed return; no dividend account"
-      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" a year, paid in four quarterly distributions (Mar / Jun / Sep / Dec) from the fund's return (the main account is not drawn down); the assumed return does not apply. "+(Math.round(cfg.divStartYear||1)>1?"Distributions begin in policy year "+Math.round(cfg.divStartYear||1)+". ":"")+(cfg.divMode==="cash"?(function(){const f=Math.max(1,Math.round(cfg.divDrawFrom||1)),q=clampN(Math.round(cfg.divDrawQ||1),1,4);return f===1&&q===1?"Taken as cash from year 1, March — no dividend account.":"Cash from year "+f+", "+["March","June","September","December"][q-1]+" — earlier distributions are reinvested into a charge-free dividend account.";})():"Reinvested into a separate charge-free dividend account that compounds quarterly at the fund's rate.")]);
+      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" a year, paid in four quarterly distributions (Mar / Jun / Sep / Dec) from the fund's return (the main account is not drawn down); the assumed return does not apply. "+(cfg.divMode==="cash"?(function(){const f=Math.max(1,Math.round(cfg.divStartYear||1)),q=clampN(Math.round(cfg.divDrawQ||1),1,4);return f===1&&q===1?"Taken as cash from year 1, March — no dividend account.":"Cash from year "+f+", "+["March","June","September","December"][q-1]+" — the distributions before then are reinvested into a charge-free dividend account, so they keep earning the fund's rate.";})():"Reinvested from the first policy year into a separate charge-free dividend account that compounds quarterly at the fund's rate.")]);
   }
   assumptions.push(["Top-up charge",p.topupFee?pct(p.topupFee)+" of every top-up (one-off and regular), taken before it is invested":"none"]);
   if(k==="EASY")assumptions.push(["Premium paid by",cfg.easyPay==="cpf"?"CPF OA — no charges":"Cash / SRS — 3% entry charge on the first premium"]);
@@ -2266,17 +2249,13 @@ $("#regTopFreq").addEventListener("change",e=>{
   state.regTopFreq=[1,2,4,12].includes(+e.target.value)?+e.target.value:12;
   clampRegTop();
 });
-$("#divDrawFrom").addEventListener("change",e=>{
+$("#divStartYear").addEventListener("change",e=>{
   const v=parseInt(e.target.value,10);
-  state.divDrawFrom=isFinite(v)?Math.max(1,v):1;render();
+  state.divStartYear=isFinite(v)?Math.max(1,v):1;render();
 });
 $("#divDrawQ").addEventListener("change",e=>{
   const v=parseInt(e.target.value,10);
   state.divDrawQ=isFinite(v)?clampN(v,1,4):1;render();
-});
-$("#divStartYear").addEventListener("change",e=>{
-  const v=parseInt(e.target.value,10);
-  state.divStartYear=isFinite(v)?Math.max(1,v):1;render();
 });
 $("#exactTog").onclick=()=>{state.exact=!state.exact;syncInputs();paintParity();render();};
 $("#themeBtn").onclick=()=>{
