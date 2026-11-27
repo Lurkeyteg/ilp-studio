@@ -831,8 +831,11 @@ function project(key,o){
     const topCharge=top*topRate;
     const topNet=top-topCharge;
     topCum+=top;
-    const sp=specialRate(p,t)*o.premium;
-    const inv=(p.invYears[1]>=p.invYears[0]&&t>=p.invYears[0]&&t<=p.invYears[1])?p.invRate*o.premium:0;
+    /* With a dividend fund selected, the plan's own return AND its bonus credits
+       are switched off: the fund's distribution is the only source of value, and
+       the projected-return margin over it is treated as neutral smoothing. */
+    const sp=fundOn?0:specialRate(p,t)*o.premium;
+    const inv=(!fundOn&&p.invYears[1]>=p.invYears[0]&&t>=p.invYears[0]&&t<=p.invYears[1])?p.invRate*o.premium:0;
     const inflow=b*(1+wb)+topNet;
     invested+=inflow;
     const av0=invested+sp;
@@ -850,7 +853,7 @@ function project(key,o){
     } else if(key==="AWV10"){
       const base=(t===1)?(o.premium*(1+wb)+topNet):(exact?(b+topNet):inflow);
       const u=t<=p.suppYears?p.supp:0;
-      perfBonus=t>=9?p.perf*net:0;
+      perfBonus=(!fundOn&&t>=9)?p.perf*net:0;
       divBase=fundOn?(net+base+inv+perfBonus):0;
       av=(av+base+inv)*(1+growth);
       charge=av*u;
@@ -866,7 +869,7 @@ function project(key,o){
       // it like the other plans; `exact` restores the sheet's no-growth behaviour.
       const pre0=net+inflow;
       const u=t<=p.suppYears?p.supp:0;
-      perfBonus=t>=9?p.perf*net:0;
+      perfBonus=(!fundOn&&t>=9)?p.perf*net:0;
       divBase=fundOn?(pre0+inv+perfBonus):0;
       if(exact&&!fundOn){
         charge=pre0*u;
@@ -1455,14 +1458,11 @@ function renderDivHint(lastRes,altRes){
     return;
   }
   const y=state.divYield/100,q=quartersInYear1();
-  const perYear=state.premium*y;
   const drawFrom=Math.max(1,Math.round(state.divStartYear||1));
   const drawQ=clampN(Math.round(state.divDrawQ||1),1,4);
   const qname=["March","June","September","December"][drawQ-1];
-  let txt=`<b>${pct(y)} a year</b>, paid in <b>four quarterly distributions</b> at the Mar / Jun / Sep / Dec Ex-Dates`
-    +` — ≈ <b>${money(perYear/4)}</b> a quarter · <b>${money(perYear)}</b> a year on a ${money(state.premium)} premium`
-    +` (four payments a year).`
-    +`<br><b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's ${pct(y)} distribution, paid from the fund's return, so it never draws down the main account.`;
+  let txt=`<b>${pct(y)} a year</b>, paid in <b>four distributions</b> at the Mar / Jun / Sep / Dec Ex-Dates.`
+    +`<br><b>With a fund selected every other return and bonus stops</b> — the fund's ${pct(y)} distribution is the only thing the policy earns. The difference between the projected return and the distribution is the <b>smoothing margin</b>; smoothing is assumed neutral, so the main account's value and the distribution amount stay level.`;
   if(state.divMode==="reinvest")
     txt+=` All distributions are <b>reinvested from the first policy year</b> into a separate <b>dividend account</b> with no charges, compounding quarterly at the fund's ${pct(y)} a year.`;
   else if(drawFrom===1&&drawQ===1)
@@ -1794,7 +1794,9 @@ function methodRows(key,cfg){
   if(cfg.divFund==="none"){
     rows.push(["Dividends","no dividend fund — the plan grows at the assumed return; there is no dividend account"]);
   }else{
-    rows.push(["Dividends",`${fund.label} · <b>${pct(cfg.divYield/100)} a year</b>, paid in four quarterly distributions at the Mar / Jun / Sep / Dec Ex-Dates from the fund's return — the main account is not drawn down by them. <b>The assumed return does not apply while a fund is selected</b> — the entitlement is the fund's distribution.`]);
+    rows.push(["Dividends",`${fund.label} · <b>${pct(cfg.divYield/100)} a year</b>, paid in four distributions at the Mar / Jun / Sep / Dec Ex-Dates from the fund's return — the main account is not drawn down by them. <b>Every other return and bonus stops while a fund is selected</b> — the entitlement is the fund's distribution.`]);
+    const sMargin=cfg.rate-cfg.divYield;
+    rows.push(["Smoothing",`projected return <b>${pct(cfg.rate/100)}</b> less the <b>${pct(cfg.divYield/100)}</b> distribution = <b>${pct(Math.max(0,sMargin)/100)}</b> a year of smoothing margin${sMargin<0?" — the distribution is above the projected return, so part of it may be paid out of capital":""}. Smoothing is assumed neutral: the margin absorbs the payouts, so the main account's value — and the distribution amount — stays level. Reinvested distributions grow at the fund's own rate.`]);
     const dF=Math.max(1,Math.round(cfg.divStartYear||1)),dQ=clampN(Math.round(cfg.divDrawQ||1),1,4);
     const dQn=["March","June","September","December"][dQ-1];
     rows.push(["Dividend account",cfg.divMode==="cash"
@@ -1821,9 +1823,11 @@ function renderMethod(){
 const WB_IMG={APA30:"wb-APA30.png",AWV10:"wb-AWV10.png",PWV5:"wb-PWV5.png",PWV2:"wb-PWV2.png"};
 
 function renderBullets(){
-  const p=PLANS[state.plan];
-  $("#planBullets").innerHTML=(p.bullets||[])
+  const p=PLANS[state.plan],fundOn=state.divFund!=="none";
+  let html=(p.bullets||[])
     .map(b=>`<div class="bul"><span class="bk">✓</span><span>${b}</span></div>`).join("");
+  if(fundOn)html+=`<div class="bul" style="opacity:.8"><span class="bk">✕</span><span>The plan's assumed return and its <b>special, investment and performance bonuses are switched off</b> while a dividend fund is selected — the fund's distribution replaces them (the welcome bonus still applies).</span></div>`;
+  $("#planBullets").innerHTML=html;
 }
 
 function renderBonus(){
@@ -1924,17 +1928,16 @@ function renderFoot(){
   (3) Invest Easy charges its 3% entry fee twice in year 1. Switch <b>sheet-exact</b> on to get the spreadsheet's
   own numbers back, including its flat, un-banded welcome bonuses.
   <br><br>
-  <b>Dividends</b> are modelled as quarterly distributions generated on the <b>main account</b> (which holds the
+  <b>Dividends</b> are modelled as four distributions a year generated on the <b>main account</b> (which holds the
   premiums, bonuses and top-ups and pays every charge) — the AIA Global Adventurous Income (target 6–7% p.a.)
-  or Global Dynamic Income (4–5%), Ex-Dates in March, June, September and December. The distribution is paid out
-  of the fund's return, so it does <b>not</b> draw down the main account: once charges stop, the main account
-  holds its value. Choosing a fund is <b>exclusive</b>: the plan's assumed return does not apply, and the client
-  is entitled to the fund's distribution instead. <b>Reinvest</b> moves each distribution into a separate
-  <b>dividend account</b> that carries no charges and compounds at the fund's own rate; <b>take cash</b> pays it
-  out and no dividend account is created. A policy started part-way through the year receives fewer than four
-  payments in year 1. The rate is an assumption you set, not a promise: AIA declares each quarter, distributions
-  may be paid out of capital, and neither capital nor dividends are guaranteed. Use the fund's last four declared
-  dividends for a more honest figure.
+  or Global Dynamic Income (4–5%), Ex-Dates in March, June, September and December. Choosing a fund is
+  <b>exclusive</b>: the plan's assumed return <b>and every plan bonus stop</b>, and the client is entitled to the
+  fund's distribution instead. The projected return less the distribution is the <b>smoothing margin</b>;
+  smoothing is assumed neutral, so the main account's value and the distribution amount stay level. <b>Reinvest</b>
+  moves each distribution into a separate <b>dividend account</b> that carries no charges and compounds at the
+  fund's own rate; <b>take cash</b> pays it out and no dividend account is created. The rate is an assumption you
+  set, not a promise: AIA declares each quarter, distributions may be paid out of capital, and neither capital nor
+  dividends are guaranteed. Use the fund's last four declared dividends for a more honest figure.
   <br><br>
   ${protBit}
   <br><br>
@@ -2064,7 +2067,7 @@ function reportModel(k,cfg){
     assumptions.push(["Ad-hoc top-ups",topupText(cfg)]);
     assumptions.push(["Dividends",cfg.divFund==="none"
       ? "no dividend fund — the plan grows at the assumed return; no dividend account"
-      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" a year, paid in four quarterly distributions (Mar / Jun / Sep / Dec) from the fund's return (the main account is not drawn down); the assumed return does not apply. "+(cfg.divMode==="cash"?(function(){const f=Math.max(1,Math.round(cfg.divStartYear||1)),q=clampN(Math.round(cfg.divDrawQ||1),1,4);return f===1&&q===1?"Taken as cash from year 1, March — no dividend account.":"Cash from year "+f+", "+["March","June","September","December"][q-1]+" — the distributions before then are reinvested into a charge-free dividend account, so they keep earning the fund's rate.";})():"Reinvested from the first policy year into a separate charge-free dividend account that compounds quarterly at the fund's rate.")]);
+      : (DIV_FUNDS[cfg.divFund]||DIV_FUNDS.none).label+" · "+pct(cfg.divYield/100)+" a year, paid in four distributions (Mar / Jun / Sep / Dec) from the fund's return (the main account is not drawn down); every other return and bonus stops. Smoothing margin: "+pct(Math.max(0,cfg.rate-cfg.divYield)/100)+" a year, assumed neutral so the account value and distribution amount stay level. "+(cfg.divMode==="cash"?(function(){const f=Math.max(1,Math.round(cfg.divStartYear||1)),q=clampN(Math.round(cfg.divDrawQ||1),1,4);return f===1&&q===1?"Taken as cash from year 1, March — no dividend account.":"Cash from year "+f+", "+["March","June","September","December"][q-1]+" — the distributions before then are reinvested into a charge-free dividend account, so they keep earning the fund's rate.";})():"Reinvested from the first policy year into a separate charge-free dividend account that compounds quarterly at the fund's rate.")]);
   }
   assumptions.push(["Top-up charge",p.topupFee?pct(p.topupFee)+" of every top-up (one-off and regular), taken before it is invested":"none"]);
   if(k==="EASY")assumptions.push(["Premium paid by",cfg.easyPay==="cpf"?"CPF OA — no charges":"Cash / SRS — 3% entry charge on the first premium"]);
@@ -2106,7 +2109,8 @@ function reportHTML(m){
   h+=`</tbody></table>`;
   h+=`<h2>How this plan works</h2>`;
   h+=m.method.map(([k,v])=>`<div class="mrow"><span class="mk">${k}</span><span class="mv">${v}</span></div>`).join("");
-  if((p.bullets||[]).length)h+=`<h2>Plan highlights</h2>`+p.bullets.map(b=>`<div class="bul"><span class="bk">✓</span><span>${b}</span></div>`).join("");
+  if((p.bullets||[]).length)h+=`<h2>Plan highlights</h2>`+p.bullets.map(b=>`<div class="bul"><span class="bk">✓</span><span>${b}</span></div>`).join("")
+    +(cfg.divFund!=="none"?`<div class="bul"><span class="bk">✕</span><span>The plan's assumed return and its special, investment and performance bonuses are switched off while a dividend fund is selected — the fund's distribution replaces them (the welcome bonus still applies).</span></div>`:"");
   h+=`<p class="note">Projections use a flat assumed return and each plan's charges as written. `
     +(cfg.exact?"Sheet-exact mode is ON — every yearly value reproduces the source spreadsheet to the cent."
                 :"Sheet-exact mode is OFF — the three documented corrections apply (PWV growth, APA/AWV year-1 bonuses, Invest Easy entry fee).")
