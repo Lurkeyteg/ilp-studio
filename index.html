@@ -892,8 +892,11 @@ function project(key,o){
        distribution before that point is reinvested instead. */
     let dividend=0,divPaid=0,divReinvested=0;
     if(fundYear){
-      const qn=divY/4;
-      const perQ=Math.max(0,divBase)*qn;
+      /* Quarterly compounding calibrated so the EFFECTIVE annual rate is exactly
+         the stated yield: (1+r)^(1/4) - 1, not the nominal r/4 (which would turn
+         5% into 5.09% a year). */
+      const qn=Math.pow(1+divY,1/4)-1;
+      const perQ=Math.max(0,divBase)*(divY/4);
       for(const q of activeQuarters(t,startMonth)){
         dividend+=perQ;
         divAcct=divAcct*(1+qn);
@@ -1480,7 +1483,7 @@ function renderDivHint(lastRes,altRes){
   if((state.divFrom||1)>1)
     txt+=` The fund is switched on in <b>year ${state.divFrom}</b> — before then the plan runs at its projected ${pct((state.rate||0)/100)} and keeps its bonuses.`;
   if(state.divMode==="reinvest")
-    txt+=` All distributions are <b>reinvested from the fund's first year</b> into a separate <b>dividend account</b> with no charges, compounding quarterly at the fund's ${pct(y)} a year.`;
+    txt+=` All distributions are <b>reinvested from the fund's first year</b> into a separate <b>dividend account</b> with no charges, compounding quarterly at an effective ${pct(y)} a year.`;
   else if(drawFrom===1&&drawQ===1)
     txt+=` Taken as <b>cash from year 1, March</b> — every quarterly distribution leaves the policy, so no dividend account is created.`;
   else
@@ -1818,8 +1821,8 @@ function methodRows(key,cfg){
     rows.push(["Dividend account",cfg.divMode==="cash"
       ? (dF===1&&dQ===1
           ? "not created — distributions are taken as cash and leave the policy"
-          : `distributions before year ${dF}, ${dQn} are reinvested here (<b>no charges</b>, compounding quarterly at ${pct(cfg.divYield/100)} a year), so they keep earning; from year ${dF}, ${dQn} they are taken as cash`)
-      : `holds the reinvested distributions, <b>no charges</b>, compounding quarterly at the fund's ${pct(cfg.divYield/100)} a year`]);
+          : `distributions before year ${dF}, ${dQn} are reinvested here (<b>no charges</b>, compounding quarterly at an effective ${pct(cfg.divYield/100)} a year), so they keep earning; from year ${dF}, ${dQn} they are taken as cash`)
+      : `holds the reinvested distributions, <b>no charges</b>, compounding quarterly at an effective ${pct(cfg.divYield/100)} a year`]);
   }
   if(Object.keys(cfg.topups||{}).length||cfg.regTopOn)rows.push(["Ad-hoc / regular top-ups",topupText(cfg)]);
   if(p.topupFee)rows.push(["Top-up charge",`<b>${pct(p.topupFee)}</b> of every top-up (one-off or regular), taken before it buys into the plan`]);
